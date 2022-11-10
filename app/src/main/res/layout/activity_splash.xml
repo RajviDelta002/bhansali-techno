@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:background="@color/white"
+    tools:context=".activity.SplashActivity">
+
+    <ImageView
+        android:id="@+id/imgLogo1"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_50sdp"
+        android:layout_gravity="center"
+        android:src="@drawable/ic_bhansali_techno_logo_1"
+        app:layout_constraintBottom_toTopOf="@id/lylDeltaLogo"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ContentDescription" />
+
+    <LinearLayout
+        android:id="@+id/lylDeltaLogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/_5sdp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/tvCompanyNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="@font/gilroy_bold"
+            android:gravity="center"
+            android:text="Powered By : "
+            android:textColor="@color/black"
+            android:textSize="@dimen/_10sdp"
+            tools:ignore="HardcodedText,RtlHardcoded,SpUsage" />
+
+        <ImageView
+            android:id="@+id/imgDeltaLogo"
+            android:layout_width="@dimen/_100sdp"
+            android:layout_height="@dimen/_30sdp"
+            android:layout_gravity="center"
+            android:padding="@dimen/_4sdp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_delta_logo"
+            android:visibility="visible"
+            app:tint="@color/colorAccent"
+            tools:ignore="ContentDescription,RtlHardcoded" />
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

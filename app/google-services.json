@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "312475082434",
+    "project_id": "bhansali-techno",
+    "storage_bucket": "bhansali-techno.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:312475082434:android:785e240e3a889db2c2e55b",
+        "android_client_info": {
+          "package_name": "com.delta.bhansalitechno"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "312475082434-27cigl5kp8ub1rsng8rk0aga7tsraugt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDRpkOv5EO--hCFLpnHLi_jsxW34_OD6CQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "312475082434-27cigl5kp8ub1rsng8rk0aga7tsraugt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

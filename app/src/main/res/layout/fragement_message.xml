@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_sheet"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="0dp"
+    app:layout_behavior="@string/bottom_sheet_behavior"
+    tools:ignore="UselessParent">
+
+    <View
+        android:layout_width="@dimen/_70sdp"
+        android:layout_height="@dimen/_5sdp"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:background="@drawable/edittext_bg" />
+
+    <TextView
+        android:id="@+id/titellbl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginVertical="@dimen/_5sdp"
+        android:fontFamily="@font/gilroy_medium"
+        android:gravity="center"
+        android:text="@string/message"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_15sdp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_1sdp"
+        android:layout_marginTop="@dimen/_4sdp"
+        android:background="@color/black" />
+
+    <TextView
+        android:id="@+id/lblMessageError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginVertical="@dimen/_10sdp"
+        android:fontFamily="@font/gilroy_regular"
+        android:gravity="center_vertical"
+        android:paddingLeft="@dimen/_16sdp"
+        android:paddingRight="@dimen/_16sdp"
+        android:textColor="@color/black"
+        android:textSize="@dimen/_14sdp"
+        tools:text="@string/hint" />
+
+    <TextView
+        android:id="@+id/lblDismiss"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="@dimen/_10sdp"
+        android:layout_marginBottom="@dimen/_10sdp"
+        android:background="@drawable/edittext_bg"
+        android:backgroundTint="#0097ff"
+        android:fontFamily="@font/gilroy_semibold"
+        android:gravity="center"
+        android:paddingLeft="@dimen/_8sdp"
+        android:paddingTop="@dimen/_6sdp"
+        android:paddingRight="@dimen/_8sdp"
+        android:paddingBottom="@dimen/_6sdp"
+        android:text="Dismiss"
+        android:textColor="@color/white"
+        android:textSize="@dimen/_14sdp"
+        tools:ignore="HardcodedText" />
+
+</LinearLayout>
+
