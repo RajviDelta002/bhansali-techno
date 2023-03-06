@@ -555,6 +555,46 @@ public class PrefManager {
         return sharedPreferences.getString("Machine", KEY_EMPTY_STRING);
     }
 
+    public void setMachineNo(String machineNo) {
+        editor = sharedPreferences.edit();
+        editor.putString("MachineNo", machineNo);
+        editor.apply();
+    }
+
+    public String getMachineNo() {
+        return sharedPreferences.getString("MachineNo", KEY_EMPTY_STRING);
+    }
+
+    public void setMachineCode(String machineCode) {
+        editor = sharedPreferences.edit();
+        editor.putString("MachineCode", machineCode);
+        editor.apply();
+    }
+
+    public String getMachineCode() {
+        return sharedPreferences.getString("MachineCode", KEY_EMPTY_STRING);
+    }
+
+    public void setMachineName(String machineName) {
+        editor = sharedPreferences.edit();
+        editor.putString("MachineName", machineName);
+        editor.apply();
+    }
+
+    public String getMachineName() {
+        return sharedPreferences.getString("MachineName", KEY_EMPTY_STRING);
+    }
+
+    public void setMachineId(String machineId) {
+        editor = sharedPreferences.edit();
+        editor.putString("MachineId", machineId);
+        editor.apply();
+    }
+
+    public String getMachineId() {
+        return sharedPreferences.getString("MachineId", KEY_EMPTY_STRING);
+    }
+
     public void setProcess(String process) {
         editor = sharedPreferences.edit();
         editor.putString("Process", process);

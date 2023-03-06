@@ -119,7 +119,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     bitmap = getBitmapFromURL(photo);
                                     bitmap = getCircularBitmap(bitmap);
                                 } else {
-                                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.app_logo);
+                                    //bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bhansali_techno_logo_1);
+                                    bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                                     bitmap = getCircularBitmap(bitmap);
                                 }
 
@@ -127,7 +128,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                 bigTextStyle.bigText(contentText);
 
                                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-                                        .setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
+                                        //.setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
+                                        .setSmallIcon(R.mipmap.ic_launcher)
                                         .setLargeIcon(bitmap)
                                         .setContentTitle(data.get("Title").replace("%20", " "))
                                         .setContentText(data.get("message"))
@@ -178,7 +180,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     bitmap = getBitmapFromURL(photo);
                                     bitmap = getCircularBitmap(bitmap);
                                 } else {
-                                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.app_logo);
+                                    //bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bhansali_techno_logo_1);
+                                    bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                                     bitmap = getCircularBitmap(bitmap);
                                 }
 
@@ -186,7 +189,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                 bigTextStyle.bigText(contentText);
 
                                 NotificationCompat.Builder notificationBuilderForfees = new NotificationCompat.Builder(getApplicationContext())
-                                        .setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
+                                        //.setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
+                                        .setSmallIcon(R.mipmap.ic_launcher)
                                         .setLargeIcon(bitmap)
                                         .setContentTitle(data.get("Title").replace("%20", " "))
                                         .setStyle(bigTextStyle)

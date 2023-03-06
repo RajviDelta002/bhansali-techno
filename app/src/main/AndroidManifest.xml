@@ -33,7 +33,8 @@
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:screenOrientation="fullSensor"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
-            android:hardwareAccelerated="false">
+            android:hardwareAccelerated="false"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -41,18 +42,27 @@
         </activity>
 
         <activity
+            android:name="com.delta.bhansalitechno.activity.MachineActivity"
+            android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize"
+            android:hardwareAccelerated="true"
+            android:exported="true"/>
+
+        <activity
             android:name="com.delta.bhansalitechno.activity.DashboardActivity"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:screenOrientation="fullSensor"
             android:windowSoftInputMode="adjustResize"
-            android:hardwareAccelerated="false"/>
+            android:hardwareAccelerated="false"
+            android:exported="true"/>
 
         <activity
             android:name="com.delta.bhansalitechno.activity.DashboardActivityNew"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|screenSize|smallestScreenSize"
             android:screenOrientation="fullSensor"
             android:windowSoftInputMode="adjustResize"
-            android:hardwareAccelerated="false"/>
+            android:hardwareAccelerated="false"
+            android:exported="true"/>
 
         <activity
             android:name="com.delta.bhansalitechno.activity.LoginActivity"
@@ -60,11 +70,13 @@
             android:screenOrientation="fullSensor"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan"
             tools:ignore="LockedOrientationActivity"
-            android:hardwareAccelerated="false"/>
+            android:hardwareAccelerated="false"
+            android:exported="true"/>
 
         <activity
             android:name="com.theartofdev.edmodo.cropper.CropImageActivity"
-            android:theme="@style/Base.Theme.AppCompat" />
+            android:theme="@style/Base.Theme.AppCompat"
+            android:exported="true"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

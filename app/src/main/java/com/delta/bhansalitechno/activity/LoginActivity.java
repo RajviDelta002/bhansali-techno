@@ -324,7 +324,7 @@ public class LoginActivity extends AppCompatActivity {
                                 prefManager.setIsAdmin(IsAdmin);
                                 prefManager.setLoggedIn("True");
 
-                                startActivity(new Intent(LoginActivity.this, DashboardActivityNew.class));
+                                startActivity(new Intent(LoginActivity.this, MachineActivity.class));
                                 finish();
                             } else {
                                 if (p.isShowing()) {

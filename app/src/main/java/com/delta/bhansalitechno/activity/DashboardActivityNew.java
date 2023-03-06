@@ -15,7 +15,6 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -46,7 +45,6 @@ import com.delta.bhansalitechno.utils.ConnectionDetector;
 import com.delta.bhansalitechno.utils.NetworkUtils;
 import com.delta.bhansalitechno.utils.PrefManager;
 import com.delta.bhansalitechno.utils.Utils;
-import com.delta.bhansalitechno.utils.ZoomLinearLayout;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
@@ -260,7 +258,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                     break;*/
                 case R.id.imgStartBtn:
                     if (Objects.requireNonNull(tvJobNo.getText()).toString().isEmpty()) {
-                        Toast.makeText(this, "Please select Job No first.", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(this, "Please select Job No first.", Toast.LENGTH_SHORT).show();
+                        showErrorMessage("Please select Job No first.");
                     } else {
                         if (checkJobStartOrNot.equalsIgnoreCase("False")) {
                             apiStartJob();
@@ -701,6 +700,20 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         try {
             LogoutFragment logoutFragment = new LogoutFragment(() -> {
                 prefManager.setLoggedIn("False");
+                prefManager.setMachineCode("");
+                prefManager.setMachineNo("");
+                prefManager.setMachineId("");
+                prefManager.setMachineName("");
+                prefManager.setMachine("");
+                prefManager.setProcess("");
+                prefManager.setShop("");
+                prefManager.setJobNo("");
+                prefManager.setJobId("");
+                prefManager.setItmName("");
+                prefManager.setPlanQty("");
+                prefManager.setHandlerTime("");
+                prefManager.setStartTime("");
+
                 startActivity(new Intent(DashboardActivityNew.this, LoginActivity.class));
                 finish();
             });
@@ -751,6 +764,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
                 HashMap<String, RequestBody> map = new HashMap<>();
                 map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
+                map.put("MachineId", NetworkUtils.createPartFromString(prefManager.getMachineId()));
 
                 new ApiUtil(this, API_JOB_NO, map, null, new OnResponse() {
                     @Override
@@ -782,11 +796,13 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String ItmName = object.has("ItmName") ? object.getString("ItmName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String ShopName = object.has("ShopName") ? object.getString("ShopName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String MachineName = object.has("MachineName") ? object.getString("MachineName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String DoneQty = object.has("DoneQty") ? object.getString("DoneQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
 
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, "");
+                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty);
                                     jobNoList.add(noModel);
                                 }
                             }
@@ -871,13 +887,13 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             tvProcessName.setText("Process : " + jobNoList.get(i).getProcessName());
 
                             tvItemCode.setText(jobNoList.get(i).getItmName());
-                            tvPlanQty.setText(String.format("%.0f", Double.parseDouble(jobNoList.get(i).getQty())));
+                            tvPlanQty.setText(String.format("%.0f", Double.parseDouble(jobNoList.get(i).getPendingQty())));
 
                             prefManager.setShop(jobNoList.get(i).getShopName());
                             prefManager.setMachine(jobNoList.get(i).getMachineName());
                             prefManager.setProcess(jobNoList.get(i).getProcessName());
                             prefManager.setItmName(jobNoList.get(i).getItmName());
-                            prefManager.setPlanQty(String.format("%.0f", Double.parseDouble(jobNoList.get(i).getQty())));
+                            prefManager.setPlanQty(String.format("%.0f", Double.parseDouble(jobNoList.get(i).getPendingQty())));
                         }
                     }
                 });
@@ -950,10 +966,11 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String ShopName = object.has("ShopName") ? object.getString("ShopName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String MachineName = object.has("MachineName") ? object.getString("MachineName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String PlanQty = object.has("PlanQty") ? object.getString("PlanQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
 
                                     StopJobNoModel stopJobNoModel = new StopJobNoModel(JobListStartStopId, JobListId, ActivityByEmployeeId, ProcessId,
                                             ItmId, StartDateTime, EndDateTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId,
-                                            LastUpdatedByUserId, PDFFile, JobNo, EmployeeName, ProcessName, ItmName, ShopName, MachineName,PlanQty);
+                                            LastUpdatedByUserId, PDFFile, JobNo, EmployeeName, ProcessName, ItmName, ShopName, MachineName, PlanQty, PendingQty);
                                     checkJobNoList.add(stopJobNoModel);
                                 }
                             }
@@ -966,9 +983,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             tvDrawingNoShow.setText("Process : " + checkJobNoList.get(0).getProcessName());
                             tvProcessName.setText("Process : " + checkJobNoList.get(0).getProcessName());
                             tvItemCode.setText(checkJobNoList.get(0).getItmName());
-                            if (!checkJobNoList.get(0).getPlanQty().equalsIgnoreCase("")){
+                            if (!checkJobNoList.get(0).getPlanQty().equalsIgnoreCase("")) {
                                 //tvPlanQty.setText(String.format("%.0f", Double.parseDouble(checkJobNoList.get(0).getQty())));
-                                tvPlanQty.setText(String.format("%.0f", Double.parseDouble(checkJobNoList.get(0).getPlanQty())));
+                                tvPlanQty.setText(String.format("%.0f", Double.parseDouble(checkJobNoList.get(0).getPendingQty())));
                             }
 
                             //tvJobNo.setText(prefManager.getJobNo());
@@ -1101,11 +1118,13 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String ShopName = object.has("ShopName") ? object.getString("ShopName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String MachineName = object.has("MachineName") ? object.getString("MachineName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String PDFFile = object.has("PDFFile") ? object.getString("PDFFile").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String DoneQty = object.has("DoneQty") ? object.getString("DoneQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
 
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, PDFFile);
+                                            ItmName, ShopName, MachineName, PDFFile, DoneQty, PendingQty);
                                     startJobNoList.add(noModel);
                                 }
 
@@ -1254,6 +1273,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                 p.dismiss();
                             }
 
+                            checkJobStartOrNot = "False";
                             tvJobNo.setText("");
                             tvItemCode.setText("");
                             tvPlanQty.setText("");

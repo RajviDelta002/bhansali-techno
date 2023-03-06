@@ -68,11 +68,14 @@ public class StopJobNoModel {
     @SerializedName("PlanQty")
     @Expose
     private String PlanQty;
+    @SerializedName("PendingQty")
+    @Expose
+    private String PendingQty;
 
     public StopJobNoModel(String jobListStartStopId, String jobListId, String activityByEmployeeId, String processId, String itmId,
                           String startDateTime, String endDateTime, String qty, String remarks, String insertedOn, String lastUpdatedOn,
-                          String insertedByUserId, String lastUpdatedByUserId, String pDFFile, String jobNo, String employeeName,
-                          String processName, String itmName, String shopName, String machineName, String PlanQty) {
+                          String insertedByUserId, String lastUpdatedByUserId, String PDFFile, String jobNo, String employeeName,
+                          String processName, String itmName, String shopName, String machineName, String planQty, String pendingQty) {
         this.jobListStartStopId = jobListStartStopId;
         this.jobListId = jobListId;
         this.activityByEmployeeId = activityByEmployeeId;
@@ -86,14 +89,15 @@ public class StopJobNoModel {
         this.lastUpdatedOn = lastUpdatedOn;
         this.insertedByUserId = insertedByUserId;
         this.lastUpdatedByUserId = lastUpdatedByUserId;
-        this.PDFFile = pDFFile;
+        this.PDFFile = PDFFile;
         JobNo = jobNo;
         EmployeeName = employeeName;
         ProcessName = processName;
         ItmName = itmName;
         ShopName = shopName;
         MachineName = machineName;
-        this.PlanQty = PlanQty;
+        PlanQty = planQty;
+        PendingQty = pendingQty;
     }
 
     public String getJobListStartStopId() {
@@ -262,5 +266,13 @@ public class StopJobNoModel {
 
     public void setPlanQty(String planQty) {
         PlanQty = planQty;
+    }
+
+    public String getPendingQty() {
+        return PendingQty;
+    }
+
+    public void setPendingQty(String pendingQty) {
+        PendingQty = pendingQty;
     }
 }

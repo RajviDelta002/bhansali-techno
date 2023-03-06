@@ -68,11 +68,17 @@ public class JobNoModel {
     @SerializedName("PDFFile")
     @Expose
     private String pdfFile;
+    @SerializedName("DoneQty")
+    @Expose
+    private String doneQty;
+    @SerializedName("PendingQty")
+    @Expose
+    private String pendingQty;
 
     public JobNoModel(String jobListId, String jobNo, String dt, String employeeId, String processId, String itmId, String startDateTime,
                       String endDateTime, String cycleTime, String qty, String remarks, String insertedOn, String lastUpdatedOn,
                       String insertedByUserId, String lastUpdatedByUserId, String employeeName, String processName, String itmName,
-                      String shopName, String machineName,String pdfFile) {
+                      String shopName, String machineName, String pdfFile, String doneQty, String pendingQty) {
         this.jobListId = jobListId;
         this.jobNo = jobNo;
         this.dt = dt;
@@ -94,6 +100,8 @@ public class JobNoModel {
         this.shopName = shopName;
         this.machineName = machineName;
         this.pdfFile = pdfFile;
+        this.doneQty = doneQty;
+        this.pendingQty = pendingQty;
     }
 
     public String getJobListId() {
@@ -262,5 +270,21 @@ public class JobNoModel {
 
     public void setPdfFile(String pdfFile) {
         this.pdfFile = pdfFile;
+    }
+
+    public String getDoneQty() {
+        return doneQty;
+    }
+
+    public void setDoneQty(String doneQty) {
+        this.doneQty = doneQty;
+    }
+
+    public String getPendingQty() {
+        return pendingQty;
+    }
+
+    public void setPendingQty(String pendingQty) {
+        this.pendingQty = pendingQty;
     }
 }

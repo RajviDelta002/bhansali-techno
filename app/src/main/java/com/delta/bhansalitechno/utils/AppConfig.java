@@ -23,15 +23,20 @@ public class AppConfig {
     //public static final String LEDGER_URL = "http://103.145.8.101/DeltaiAccount/"; /*Old Live KDH(not working)*/
 
     //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Local*/
-    public static final String BASE_URL = "http://110.227.253.77:90/DeltaiShop/";    /*Galaxy*/
+    //public static final String BASE_URL = "http://110.227.253.77:90/DeltaiShop/";    /*Galaxy*/
+    //public static final String BASE_URL = "http://192.168.1.200/DeltaiShop/";    /*YK*/
+    //public static final String BASE_URL = "http://45.118.217.91:91/DeltaiShop/";    /*YK*/
     //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Live*/
+    public static final String BASE_URL = "http://103.127.146.238/DeltaiShopBhansali/";    /*Live*/
 
 
     //Login(local and live)
-    //Distributor - 9106497803
-    //approval link
-    //http://103.165.6.101:9178/DeltaDealerPortal/General/UnapprovedMobileUsers.aspx
-    //aaa   123
+    //Username          Password
+    //1010              123
+    //111               123
+    //495               123
+    //559               123
+    //102               123
 
     //Keys Constant
     public static final String KEY_NULL = "";
@@ -157,6 +162,7 @@ public class AppConfig {
     public static final String API_CHECK_JOB_START = "API/API_CheckJobStart.aspx";
     public static final String API_START_JOB = "API/API_StartJob.aspx";
     public static final String API_STOP_JOB = "API/API_StopJob.aspx";
+    public static final String API_MACHINE = "API/API_MachineList.aspx";
 
     //API From Duke Marketing Person App
     //public static final String LOGIN_API = "API_Login.aspx";
