@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -47,6 +48,11 @@ import com.delta.bhansalitechno.utils.PrefManager;
 import com.delta.bhansalitechno.utils.Utils;
 import com.github.barteksc.pdfviewer.PDFView;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.play.core.appupdate.AppUpdateInfo;
+import com.google.android.play.core.appupdate.AppUpdateManager;
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory;
+import com.google.android.play.core.install.model.AppUpdateType;
+import com.google.android.play.core.install.model.UpdateAvailability;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import org.json.JSONArray;
@@ -130,6 +136,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
     String checkJobStartOrNot = "";
 
+    private AppUpdateManager appUpdateManager;
+    private static final int IMMEDIATE_APP_UPDATE_REQ_CODE = 124;
+
     @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -138,6 +147,10 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             requestWindowFeature(Window.FEATURE_NO_TITLE);
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
             setContentView(R.layout.activity_dashboard_new);
+
+            appUpdateManager = AppUpdateManagerFactory.create(getApplicationContext());
+            checkUpdate();
+
             prefManager = new PrefManager(DashboardActivityNew.this);
             rotation = 90;
 
@@ -197,7 +210,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             pdfView = findViewById(R.id.idPDFView);
 
             apiJobNoList();
-            apiVersion();
+            //apiVersion();
             apiCheckStartJob();
 
             /*final ZoomLinearLayout zoomLinearLayout = (ZoomLinearLayout) findViewById(R.id.zoom_linear_layout);
@@ -303,6 +316,30 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     @Override
     public void onBackPressed() {
         showAppExitMessage();
+    }
+
+    private void checkUpdate() {
+        try {
+            com.google.android.play.core.tasks.Task<AppUpdateInfo> appUpdateInfoTask = appUpdateManager.getAppUpdateInfo();
+            appUpdateInfoTask.addOnSuccessListener(appUpdateInfo -> {
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                        && appUpdateInfo.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)) {
+                    startUpdateFlow(appUpdateInfo);
+                } else if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    startUpdateFlow(appUpdateInfo);
+                }
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void startUpdateFlow(AppUpdateInfo appUpdateInfo) {
+        try {
+            appUpdateManager.startUpdateFlowForResult(appUpdateInfo, AppUpdateType.IMMEDIATE, this, IMMEDIATE_APP_UPDATE_REQ_CODE);
+        } catch (IntentSender.SendIntentException e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean isInternet() {
@@ -1534,6 +1571,25 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
             Toast.makeText(this, "Total Job Time : " + String.valueOf(Hours) + "hour" + String.valueOf(Mins) + "Mins", Toast.LENGTH_SHORT).show();
         } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try {
+            if (requestCode == IMMEDIATE_APP_UPDATE_REQ_CODE) {
+                if (resultCode == RESULT_CANCELED) {
+                    Toast.makeText(getApplicationContext(), "Update canceled by user!", Toast.LENGTH_LONG).show();
+                } else if (resultCode == RESULT_OK) {
+                    Toast.makeText(getApplicationContext(), "Update success!" + resultCode, Toast.LENGTH_LONG).show();
+                } else {
+                    //Toast.makeText(getApplicationContext(), "Update Failed! Result Code", Toast.LENGTH_LONG).show();
+                    checkUpdate();
+                }
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
