@@ -49,7 +49,7 @@ public class SplashActivity extends AppCompatActivity {
                     if (!isFinishing()) {
                         if (prefManager.isLoggedIn().equalsIgnoreCase("True") && !prefManager.getMachineName().isEmpty()) {
                             startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
-                        } else if (prefManager.isLoggedIn().equalsIgnoreCase("True") && !prefManager.getMachineName().isEmpty()) {
+                        } else if (prefManager.isLoggedIn().equalsIgnoreCase("True") /*&& !prefManager.getMachineName().isEmpty()*/) {
                             startActivity(new Intent(SplashActivity.this, MachineActivity.class));
                         } else {
                             startActivity(new Intent(SplashActivity.this, LoginActivity.class));

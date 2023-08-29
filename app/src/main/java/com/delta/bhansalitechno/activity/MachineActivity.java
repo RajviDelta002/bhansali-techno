@@ -63,6 +63,13 @@ public class MachineActivity extends AppCompatActivity {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_machine);
             prefManager = new PrefManager(MachineActivity.this);
 
+            if (!prefManager.getMachineName().isEmpty()) {
+                binding.tvSelectedMachine.setVisibility(View.GONE);
+                binding.tvSelectedMachine.setText("Previous Selected Machine : " + prefManager.getMachineName() +" "+ "(" + prefManager.getMachineNo() + ")");
+            } else {
+                binding.tvSelectedMachine.setVisibility(View.GONE);
+            }
+
             binding.rvMachine.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
             //binding.rvMachine.setLayoutManager(new GridLayoutManager(this, 2));
             binding.rvMachine.setItemAnimator(new DefaultItemAnimator());

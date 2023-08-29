@@ -31,7 +31,7 @@
     <string name="camera">Camera</string>
     <string name="gallery">Gallery</string>
     <string name="you_can_check_your_product_warranty_either_entering_your_product_serial_number_or_by_scanning_qr_code_from_your_product">You can check your product warranty either Entering your product serial number or by scanning QR code from your product.</string>
-    <string name="demo_address"><![CDATA[Labh Cart Sales & Service, Palanpur - 385001]]></string>
+    <string name="demo_address"><![CDATA[Delta iShop Sales & Service, Palanpur - 385001]]></string>
     <string name="contact_person">Contact Person</string>
     <string name="demo_mail">irshad@duke.in</string>
     <string name="scan">Scan</string>
@@ -155,8 +155,8 @@
     <string name="you_are_offline">You are offline.</string>
     <string name="desc_no_internet">It seems there is problem with your connection. Please check your network status.</string>
     <string name="yes_exit">Yes,Exit App.</string>
-    <string name="app_close_desc">Are you sure, \nwant to exit from Labh Cart Dealer Application ?</string>
-    <string name="close_duke_installation_tracker">Close Labh Cart Dealer</string>
+    <string name="app_close_desc">Are you sure, \nwant to exit from Delta iShop Application ?</string>
+    <string name="close_duke_installation_tracker">Close Delta iShop App</string>
     <string name="retry">Retry</string>
     <string name="no_server_connection">It seems like there is server connection issues, try after some time !!</string>
     <string name="server_connection_issues">Server Connection Issues</string>

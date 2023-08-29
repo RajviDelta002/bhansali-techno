@@ -49,13 +49,14 @@ public class TexListAdapterWithFilter extends RecyclerView.Adapter<TexListAdapte
 
         try {
             if (!TextUtils.isEmpty(data.get(position).getJobNo())) {
-                holder.lblProblem.setText(data.get(position).getJobNo());
+                holder.lblProblem.setText(data.get(position).getJobNo() + " ( Ref No : " + data.get(position).getRefNo() + " , Process Name : " + data.get(position).getProcessName() + " ) ");
             }
 
             holder.itemView.setOnClickListener(v ->
                     textListInterface.onSelect(
                             data.get(position).getJobListId(),
-                            data.get(position).getJobNo()
+                            data.get(position).getJobNo(),
+                            data.get(position).getRefNo()
                     ));
         } catch (Exception e) {
             e.printStackTrace();

@@ -30,9 +30,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.delta.bhansalitechno.R;
+import com.delta.bhansalitechno.adapter.MachineAdapter;
+import com.delta.bhansalitechno.adapter.RadioAdapter;
 import com.delta.bhansalitechno.api.ApiUtil;
 import com.delta.bhansalitechno.bottomsheets.AppExitFragment;
 import com.delta.bhansalitechno.bottomsheets.LogoutFragment;
@@ -40,7 +44,9 @@ import com.delta.bhansalitechno.bottomsheets.MessageFragment;
 import com.delta.bhansalitechno.bottomsheets.NoInternetFragment;
 import com.delta.bhansalitechno.fargments.TextListFragmentWithFilter;
 import com.delta.bhansalitechno.interfaces.OnResponse;
+import com.delta.bhansalitechno.interfaces.RecyclerViewClickListener;
 import com.delta.bhansalitechno.model.JobNoModel;
+import com.delta.bhansalitechno.model.RadioModel;
 import com.delta.bhansalitechno.model.StopJobNoModel;
 import com.delta.bhansalitechno.utils.ConnectionDetector;
 import com.delta.bhansalitechno.utils.NetworkUtils;
@@ -79,6 +85,7 @@ import okhttp3.RequestBody;
 
 import static com.delta.bhansalitechno.utils.AppConfig.API_CHECK_JOB_START;
 import static com.delta.bhansalitechno.utils.AppConfig.API_JOB_NO;
+import static com.delta.bhansalitechno.utils.AppConfig.API_RADIO_BUTTON;
 import static com.delta.bhansalitechno.utils.AppConfig.API_START_JOB;
 import static com.delta.bhansalitechno.utils.AppConfig.API_STOP_JOB;
 import static com.delta.bhansalitechno.utils.AppConfig.API_VERSION;
@@ -89,7 +96,7 @@ import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0026;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0027;
 import static com.delta.bhansalitechno.utils.AppConfig.NULL;
 
-public class DashboardActivityNew extends AppCompatActivity implements View.OnClickListener {
+public class DashboardActivityNew extends AppCompatActivity implements View.OnClickListener /*, RecyclerViewClickListener*/ {
 
     private PrefManager prefManager;
 
@@ -104,7 +111,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     private LinearLayout lylPdfShow;
     private TextView tvStartTime;
     private LottieAnimationView ltLogout;
-    private TextView tvFilter, tvRotation;
+    private TextView tvHome, tvFilter, tvRotation;
     private TextView tvItemCodeShow;
     private TextView tvShopName;
     private TextView tvGroupShow;
@@ -138,6 +145,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
     private AppUpdateManager appUpdateManager;
     private static final int IMMEDIATE_APP_UPDATE_REQ_CODE = 124;
+
+    private RecyclerView rvRadioBtn;
+    ArrayList<RadioModel> radioList = new ArrayList<>();
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -187,10 +197,14 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             tvStartTime = findViewById(R.id.tvStartTime);
             imgRotation = findViewById(R.id.imgRotation);
 
+            tvHome = findViewById(R.id.tvHome);
             tvFilter = findViewById(R.id.tvFilter);
             tvRotation = findViewById(R.id.tvRotation);
 
+            rvRadioBtn = findViewById(R.id.rvRadioBtn);
+
             imgFilter.setOnClickListener(this);
+            tvHome.setOnClickListener(this);
             tvFilter.setOnClickListener(this);
             imgFullScreen.setOnClickListener(this);
             tvJobNo.setOnClickListener(this);
@@ -244,6 +258,10 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     public void onClick(View v) {
         try {
             switch (v.getId()) {
+                case R.id.tvHome:
+                    prefManager.setMachineName("");
+                    startActivity(new Intent(DashboardActivityNew.this, MachineActivity.class));
+                    break;
                 case R.id.imgFilter:
                 case R.id.tvFilter:
                     if (lylFilter.getVisibility() == View.VISIBLE) {
@@ -442,6 +460,31 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         super.onDestroy();
         ((PDFPagerAdapter) pdfViewPager.getAdapter()).close();
     }
+
+    /*@Override
+    public void onItemClick(View view, int position) {
+        try {
+            if (view.getId() == R.id.rdBtn){
+                tvJobNo.setEnabled(false);
+                tvItemCode.setEnabled(false);
+                tvPlanQty.setEnabled(false);
+                tvHome.setVisibility(View.GONE);
+                lylFilter.setVisibility(View.GONE);
+                imgStartBtn.setVisibility(View.GONE);
+                lylStop.setVisibility(View.GONE);
+                lylDisplayData.setVisibility(View.VISIBLE);
+                pdfView.setVisibility(View.GONE);
+                ltLogout.setVisibility(View.GONE);
+
+                String urlPdf = radioList.get(position).getPDFFile();
+                mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
+                file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
+                openPDFView();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }*/
 
     @SuppressLint("StaticFieldLeak")
     private class DownloadingTask extends AsyncTask<String, Integer, String> {
@@ -800,7 +843,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 jobNoList.clear();
 
                 HashMap<String, RequestBody> map = new HashMap<>();
-                map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
+                //map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
                 map.put("MachineId", NetworkUtils.createPartFromString(prefManager.getMachineId()));
 
                 new ApiUtil(this, API_JOB_NO, map, null, new OnResponse() {
@@ -835,11 +878,13 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String MachineName = object.has("MachineName") ? object.getString("MachineName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String DoneQty = object.has("DoneQty") ? object.getString("DoneQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String RefNo = object.has("RefNo") ? object.getString("RefNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PCNo = object.has("PCNo") ? object.getString("PCNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
 
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty);
+                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty, RefNo, PCNo);
                                     jobNoList.add(noModel);
                                 }
                             }
@@ -906,8 +951,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         try {
             if (jobNoList.size() > 0) {
                 @SuppressLint({"SetTextI18n", "DefaultLocale"})
-                TextListFragmentWithFilter fragment = new TextListFragmentWithFilter(getApplicationContext(), jobNoList, (textListId, textList) -> {
+                TextListFragmentWithFilter fragment = new TextListFragmentWithFilter(getApplicationContext(), jobNoList, (textListId, textList, refNo) -> {
                     tvJobNo.setError(null);
+                    //tvJobNo.setText(textList + " ( " + refNo + " ) ");
                     tvJobNo.setText(textList);
                     selectedJobId = textListId;
                     selectedJobName = textList;
@@ -935,6 +981,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                     }
                 });
                 fragment.show(getSupportFragmentManager(), "LIST_JOB_NO");
+            } else {
+                showErrorMessage("No Record Found.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -1038,6 +1086,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             tvJobNo.setEnabled(false);
                             tvItemCode.setEnabled(false);
                             tvPlanQty.setEnabled(false);
+                            tvHome.setVisibility(View.GONE);
                             lylFilter.setVisibility(View.GONE);
                             imgStartBtn.setVisibility(View.GONE);
                             lylStop.setVisibility(View.GONE);
@@ -1049,6 +1098,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
                             file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                             openPDFView();
+
+                            apiRadioBtnList();
                         } catch (JSONException e) {
                             if (p.isShowing()) {
                                 p.dismiss();
@@ -1157,17 +1208,20 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String PDFFile = object.has("PDFFile") ? object.getString("PDFFile").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String DoneQty = object.has("DoneQty") ? object.getString("DoneQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String RefNo = object.has("RefNo") ? object.getString("RefNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PCNo = object.has("PCNo") ? object.getString("PCNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
 
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, PDFFile, DoneQty, PendingQty);
+                                            ItmName, ShopName, MachineName, PDFFile, DoneQty, PendingQty, RefNo, PCNo);
                                     startJobNoList.add(noModel);
                                 }
 
                                 tvJobNo.setEnabled(false);
                                 tvItemCode.setEnabled(false);
                                 tvPlanQty.setEnabled(false);
+                                tvHome.setVisibility(View.GONE);
                                 lylFilter.setVisibility(View.GONE);
                                 imgStartBtn.setVisibility(View.GONE);
                                 lylStop.setVisibility(View.GONE);
@@ -1179,6 +1233,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                 mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
                                 file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                                 openPDFView();
+
+                                apiRadioBtnList();
 
                                 //String urlPdf = "https://drive.google.com/viewerng/viewer?embedded=true&url=" +startJobNoList.get(0).getPdfFile();
                                 //webView(urlPdf);
@@ -1329,9 +1385,12 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             pdfView.setVisibility(View.GONE);
                             handler.removeCallbacksAndMessages(null);
                             lylFilter.setVisibility(View.VISIBLE);
+                            tvHome.setVisibility(View.VISIBLE);
                             imgRotation.setVisibility(View.GONE);
                             tvRotation.setVisibility(View.GONE);
                             ltLogout.setVisibility(View.VISIBLE);
+                            rvRadioBtn.setVisibility(View.GONE);
+                            radioList.clear();
 
                             prefManager.setJobId("");
                             prefManager.setJobNo("");
@@ -1588,6 +1647,164 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                     //Toast.makeText(getApplicationContext(), "Update Failed! Result Code", Toast.LENGTH_LONG).show();
                     checkUpdate();
                 }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void apiRadioBtnList() {
+        try {
+            if (isInternet()) {
+                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                p.setCancelable(false);
+                p.setMessage("Loading...");
+                p.show();
+
+                radioList.clear();
+
+                HashMap<String, RequestBody> map = new HashMap<>();
+                map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
+                map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                map.put("UserId", NetworkUtils.createPartFromString(prefManager.getUserId()));
+
+                new ApiUtil(this, API_RADIO_BUTTON, map, null, new OnResponse() {
+                    @Override
+                    public void onSuccess(JSONArray jsonArray) {
+                        try {
+                            if (p.isShowing()) {
+                                p.dismiss();
+                            }
+                            if (jsonArray.length() > 0) {
+                                for (int i = 0; i < jsonArray.length(); i++) {
+                                    JSONObject object = jsonArray.getJSONObject(i);
+                                    String FUId = object.has("FUId") ? object.getString("FUId") : NULL;
+                                    String LnNo = object.has("LnNo") ? object.getString("LnNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String RecordId = object.has("RecordId") ? object.getString("RecordId").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String FormName = object.has("FormName") ? object.getString("FormName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String FilePath = object.has("FilePath") ? object.getString("FilePath").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String InsertedOn = object.has("InsertedOn") ? object.getString("InsertedOn").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String LastUpdatedOn = object.has("LastUpdatedOn") ? object.getString("LastUpdatedOn").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String InsertedByUserId = object.has("InsertedByUserId") ? object.getString("InsertedByUserId").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String LastUpdatedByUserId = object.has("LastUpdatedByUserId") ? object.getString("LastUpdatedByUserId").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String FileName = object.has("FileName") ? object.getString("FileName").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String imageType = object.has("imageType") ? object.getString("imageType").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String FileTypeTextListId = object.has("FileTypeTextListId") ? object.getString("FileTypeTextListId").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String PDFFile = object.has("PDFFile") ? object.getString("PDFFile").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+                                    String FileType = object.has("FileType") ? object.getString("FileType").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+
+                                    RadioModel model = new RadioModel(FUId, LnNo, RecordId, FormName, FilePath, InsertedOn, LastUpdatedOn,
+                                            InsertedByUserId, LastUpdatedByUserId, FileName, imageType, FileTypeTextListId, PDFFile, FileType);
+                                    radioList.add(model);
+                                }
+                                rvRadioBtn.setVisibility(View.VISIBLE);
+                                RadioAdapter pipeSizeTypeAdapter = new RadioAdapter(radioList, "", (id, name, no, code) -> {
+                                    String urlPdf = code;
+                                    mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
+                                    file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
+                                    openPDFView();
+                                });
+                                LinearLayoutManager mManager = new LinearLayoutManager(DashboardActivityNew.this, LinearLayoutManager.HORIZONTAL, false);
+                                rvRadioBtn.setLayoutManager(mManager);
+                                rvRadioBtn.setAdapter(pipeSizeTypeAdapter);
+                                //setDataIntoUI();
+                            }
+                        } catch (JSONException e) {
+                            if (p.isShowing()) {
+                                p.dismiss();
+                            }
+                            e.printStackTrace();
+                            //showErrorMessage(e.getLocalizedMessage());
+                            FirebaseCrashlytics.getInstance().recordException(e);
+                        }
+                    }
+
+                    @Override
+                    public void on209(String message) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        rvRadioBtn.setVisibility(View.GONE);
+                        Toast.makeText(DashboardActivityNew.this, message, Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(message);
+                    }
+
+                    @Override
+                    public void onNullResponse() {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        rvRadioBtn.setVisibility(View.GONE);
+                        Toast.makeText(DashboardActivityNew.this, "Null Response", Toast.LENGTH_SHORT).show();
+                        //showErrorMessage("Null Response");
+                    }
+
+                    @Override
+                    public void onExceptionFired(String error) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        rvRadioBtn.setVisibility(View.GONE);
+                        Toast.makeText(DashboardActivityNew.this, error, Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(error);
+                    }
+
+                    @Override
+                    public void on400(int responseCode) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        rvRadioBtn.setVisibility(View.GONE);
+                        Toast.makeText(DashboardActivityNew.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(String.valueOf(responseCode));
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Throwable t) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        rvRadioBtn.setVisibility(View.GONE);
+                        Toast.makeText(DashboardActivityNew.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(t.getLocalizedMessage());
+                    }
+                }).request();
+            } else {
+                showNoInternet();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    private void setDataIntoUI() {
+        try {
+            if (radioList.size() > 0) {
+                rvRadioBtn.setVisibility(View.VISIBLE);
+                LinearLayoutManager mManager = new LinearLayoutManager(DashboardActivityNew.this, LinearLayoutManager.HORIZONTAL, false);
+                rvRadioBtn.setLayoutManager(mManager);
+                /*RadioAdapter customerAdapter = new RadioAdapter(radioList);
+                customerAdapter.setItemClick(this);
+                rvRadioBtn.setAdapter(customerAdapter);*/
+
+                /*tvJobNo.setEnabled(false);
+                tvItemCode.setEnabled(false);
+                tvPlanQty.setEnabled(false);
+                tvHome.setVisibility(View.GONE);
+                lylFilter.setVisibility(View.GONE);
+                imgStartBtn.setVisibility(View.GONE);
+                lylStop.setVisibility(View.GONE);
+                lylDisplayData.setVisibility(View.VISIBLE);
+                pdfView.setVisibility(View.GONE);
+                ltLogout.setVisibility(View.GONE);
+
+                String urlPdf = startJobNoList.get(0).getPdfFile();
+                mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
+                file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
+                openPDFView();*/
+            } else {
+                rvRadioBtn.setVisibility(View.GONE);
             }
         } catch (Exception e) {
             e.printStackTrace();

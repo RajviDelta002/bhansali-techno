@@ -79,10 +79,10 @@ public class TextListFragmentWithFilter extends DialogFragment {
             recyclerView.setFocusable(false);
 
             //Setting Up List To The Adapter
-            adapter = new TexListAdapterWithFilter(getActivity(), listTextLists, (problemId, problem) -> {
+            adapter = new TexListAdapterWithFilter(getActivity(), listTextLists, (problemId, problem,no) -> {
                 dismiss();
                 hideKeyboardInActivity(requireActivity(), txtSearch);
-                textListInterface.onSelect(problemId, problem);
+                textListInterface.onSelect(problemId, problem,no);
             });
             recyclerView.setAdapter(adapter);
 

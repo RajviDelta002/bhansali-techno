@@ -3,31 +3,18 @@ package com.delta.bhansalitechno.utils;
 public class AppConfig {
 
     //API Link
-    //public static final String BASE_URL = "http://192.168.0.100/3DShaktiLive/";
-    //public static final String BASE_URL = "http://192.168.0.218/3dshakti/";                /*PM*/
-    //public static final String BASE_URL = "http://192.168.0.100:90/3dShaktiLive/";          /*PM*/
 
-    //public static final String BASE_URL = "http://110.227.253.77:84/3dShaktiLive/";    /*galaxy*/
-    //public static final String BASE_URL = "http://110.227.253.77:90/3DKDH/";    /*galaxy*/
-
-    //public static final String BASE_URL = "http://192.168.0.108/KDHDealerAPI/"; /*BB*/
-    //public static final String LEDGER_URL = "http://192.168.0.108/KDHAcc/"; /*BB*/
-
-    //public static final String BASE_URL = "http://110.227.253.77:90/3DKDHV2/";    /*galaxy*/
-    //public static final String LEDGER_URL = "http://110.227.253.77:90/DeltaiAccountKDH/";    /*galaxy*/
-
-    //public static final String BASE_URL = "http://192.168.1.99/DeltaiERP/";
-    //public static final String LEDGER_URL = "http://192.168.1.99/DeltaiAccountKDH/";
-
-    //public static final String BASE_URL = "http://103.145.8.101/DeltaDealerAPI/";    /*Old Live KDH(not working)*/
-    //public static final String LEDGER_URL = "http://103.145.8.101/DeltaiAccount/"; /*Old Live KDH(not working)*/
-
-    //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Local*/
+    //public static final String BASE_URL = "http://192.168.0.172/ishop/";    /*Local*/
     //public static final String BASE_URL = "http://110.227.253.77:90/DeltaiShop/";    /*Galaxy*/
     //public static final String BASE_URL = "http://192.168.1.200/DeltaiShop/";    /*YK*/
     //public static final String BASE_URL = "http://45.118.217.91:91/DeltaiShop/";    /*YK*/
     //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Live*/
-    public static final String BASE_URL = "http://103.127.146.238/DeltaiShopBhansali/";    /*Live*/
+    //public static final String BASE_URL = "http://192.168.0.76/ishop/";    /*PM*/
+
+    //public static final String BASE_URL = "http://103.127.146.238/DeltaiShopBhansali/";    /*Old Live*/
+    public static final String BASE_URL = "http://13.235.202.211/DeltaiShopBhansali/";    /*Live*/
+    //public static final String BASE_URL = "http://110.227.211.238/DeltaKanban";    /*Live*/
+    //public static final String BASE_URL = "http://110.227.211.238:91/DeltaiShop/";    /*Live*/
 
 
     //Login(local and live)
@@ -163,6 +150,7 @@ public class AppConfig {
     public static final String API_START_JOB = "API/API_StartJob.aspx";
     public static final String API_STOP_JOB = "API/API_StopJob.aspx";
     public static final String API_MACHINE = "API/API_MachineList.aspx";
+    public static final String API_RADIO_BUTTON = "API/API_GetFileAgainstJob.aspx";
 
     //API From Duke Marketing Person App
     //public static final String LOGIN_API = "API_Login.aspx";

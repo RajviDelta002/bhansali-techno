@@ -74,11 +74,17 @@ public class JobNoModel {
     @SerializedName("PendingQty")
     @Expose
     private String pendingQty;
+    @SerializedName("RefNo")
+    @Expose
+    private String refNo;
+    @SerializedName("PCNo")
+    @Expose
+    private String pCNo;
 
     public JobNoModel(String jobListId, String jobNo, String dt, String employeeId, String processId, String itmId, String startDateTime,
                       String endDateTime, String cycleTime, String qty, String remarks, String insertedOn, String lastUpdatedOn,
                       String insertedByUserId, String lastUpdatedByUserId, String employeeName, String processName, String itmName,
-                      String shopName, String machineName, String pdfFile, String doneQty, String pendingQty) {
+                      String shopName, String machineName, String pdfFile, String doneQty, String pendingQty, String refNo, String pCNo) {
         this.jobListId = jobListId;
         this.jobNo = jobNo;
         this.dt = dt;
@@ -102,6 +108,8 @@ public class JobNoModel {
         this.pdfFile = pdfFile;
         this.doneQty = doneQty;
         this.pendingQty = pendingQty;
+        this.refNo = refNo;
+        this.pCNo = pCNo;
     }
 
     public String getJobListId() {
@@ -286,5 +294,21 @@ public class JobNoModel {
 
     public void setPendingQty(String pendingQty) {
         this.pendingQty = pendingQty;
+    }
+
+    public String getRefNo() {
+        return refNo;
+    }
+
+    public void setRefNo(String refNo) {
+        this.refNo = refNo;
+    }
+
+    public String getpCNo() {
+        return pCNo;
+    }
+
+    public void setpCNo(String pCNo) {
+        this.pCNo = pCNo;
     }
 }

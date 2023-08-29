@@ -42,6 +42,21 @@
 
             </LinearLayout>
 
+            <TextView
+                android:id="@+id/tvSelectedMachine"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:fontFamily="@font/gilroy_semibold"
+                android:gravity="center|start"
+                android:text="Number (10202)"
+                android:layout_marginStart="@dimen/_15sdp"
+                android:textColor="@color/black"
+                android:textSize="@dimen/_15sdp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvMachine"
                 android:layout_width="match_parent"
