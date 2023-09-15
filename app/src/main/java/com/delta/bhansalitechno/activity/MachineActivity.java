@@ -1,5 +1,6 @@
 package com.delta.bhansalitechno.activity;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -48,12 +49,13 @@ import static com.delta.bhansalitechno.utils.AppConfig.NULL;
 
 public class MachineActivity extends AppCompatActivity {
 
-    ActivityMachineBinding binding;
-    PrefManager prefManager;
-    ArrayList<MachineModel> machineList = new ArrayList<>();
+    private ActivityMachineBinding binding;
+    private PrefManager prefManager;
 
     private int screenOrientation = 1;
+    private final ArrayList<MachineModel> machineList = new ArrayList<>();
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,7 +67,7 @@ public class MachineActivity extends AppCompatActivity {
 
             if (!prefManager.getMachineName().isEmpty()) {
                 binding.tvSelectedMachine.setVisibility(View.GONE);
-                binding.tvSelectedMachine.setText("Previous Selected Machine : " + prefManager.getMachineName() +" "+ "(" + prefManager.getMachineNo() + ")");
+                binding.tvSelectedMachine.setText("Previous Selected Machine : " + prefManager.getMachineName() + " " + "(" + prefManager.getMachineNo() + ")");
             } else {
                 binding.tvSelectedMachine.setVisibility(View.GONE);
             }
@@ -77,7 +79,8 @@ public class MachineActivity extends AppCompatActivity {
 
             binding.btnNext.setOnClickListener(v -> {
                 if (!prefManager.getMachineName().isEmpty()) {
-                    startActivity(new Intent(MachineActivity.this, DashboardActivityNew.class));
+                    //startActivity(new Intent(MachineActivity.this, DashboardActivityNew.class));
+                    startActivity(new Intent(MachineActivity.this, StartJobListActivity.class));
                     finish();
                 } else {
                     showErrorMessage("Please select machine");
@@ -88,6 +91,18 @@ public class MachineActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putInt("ScreenOrientation", screenOrientation);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        screenOrientation = savedInstanceState.getInt("ScreenOrientation");
+        super.onRestoreInstanceState(savedInstanceState);
     }
 
     private void apiMachineList() {
@@ -122,13 +137,13 @@ public class MachineActivity extends AppCompatActivity {
                                     machineList.add(model);
                                 }
 
-                                MachineAdapter pipeSizeTypeAdapter = new MachineAdapter(MachineActivity.this, machineList, "", (id, name, no, code) -> {
+                                MachineAdapter machineAdapter = new MachineAdapter(machineList, "", (id, name, no, code) -> {
                                     prefManager.setMachineId(id);
                                     prefManager.setMachineNo(no);
                                     prefManager.setMachineCode(code);
                                     prefManager.setMachineName(name);
                                 });
-                                binding.rvMachine.setAdapter(pipeSizeTypeAdapter);
+                                binding.rvMachine.setAdapter(machineAdapter);
                                 binding.btnNext.setVisibility(View.VISIBLE);
                             }
                         } catch (JSONException e) {
@@ -204,17 +219,5 @@ public class MachineActivity extends AppCompatActivity {
 
         });
         new Handler(Looper.myLooper()).post(() -> n.show(MachineActivity.this.getSupportFragmentManager(), KEY_BTM_SHT));
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putInt("ScreenOrientation", screenOrientation);
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        screenOrientation = savedInstanceState.getInt("ScreenOrientation");
-        super.onRestoreInstanceState(savedInstanceState);
     }
 }

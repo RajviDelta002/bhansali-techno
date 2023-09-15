@@ -39,8 +39,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 
-import es.dmoral.toasty.Toasty;
-
 @SuppressLint("MissingFirebaseInstanceTokenRefresh")
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
@@ -74,9 +72,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             if (data != null) {
                 try {
                     Intent intent = null;
-                    if (Objects.requireNonNull(data.get("Types")).equalsIgnoreCase("Test")){
+                    if (Objects.requireNonNull(data.get("Types")).equalsIgnoreCase("Test")) {
                         intent = new Intent(getApplicationContext(), DashboardActivityNew.class);
-                    }else {
+                    } else {
                         intent = new Intent(getApplicationContext(), DashboardActivityNew.class);
                     }
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -225,7 +223,6 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             e.printStackTrace();
             FirebaseCrashlytics.getInstance().recordException(e);
             Log.d(TAG, "showNotification: " + e.getLocalizedMessage());
-            Toasty.error(getApplicationContext(), e.getMessage()).show();
         }
     }
 
@@ -308,5 +305,4 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Return the circular bitmap
         return dstBitmap;
     }
-
 }

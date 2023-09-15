@@ -17,11 +17,11 @@ import java.util.ArrayList;
 
 public class RadioAdapter extends RecyclerView.Adapter<RadioAdapter.RadioAdapterVH> {
 
-    private  ArrayList<RadioModel> list;
+    private final ArrayList<RadioModel> list;
     private RecyclerViewClickListener listener;
-    MachineListInterface machineListInterface;
-    int selected_position = 0;
-    String pipeSizeType;
+    private MachineListInterface machineListInterface;
+    private int selectedPosition = 0;
+    private String selectedType;
 
     public RadioAdapter(ArrayList<RadioModel> list) {
         this.list = list;
@@ -29,9 +29,8 @@ public class RadioAdapter extends RecyclerView.Adapter<RadioAdapter.RadioAdapter
 
     public RadioAdapter(ArrayList<RadioModel> list, String pipeSizeType, MachineListInterface textListInterface) {
         this.list = list;
-        this.pipeSizeType = pipeSizeType;
+        this.selectedType = pipeSizeType;
         this.machineListInterface = textListInterface;
-        //notifyDataSetChanged();
     }
 
     @NonNull
@@ -47,13 +46,13 @@ public class RadioAdapter extends RecyclerView.Adapter<RadioAdapter.RadioAdapter
             RadioModel model = list.get(position);
             holder.rdBtn.setText(model.getFileType());
 
-            if (!pipeSizeType.isEmpty()) {
-                if (pipeSizeType.equals(model.getFileType())) {
-                    selected_position = position;
+            if (!selectedType.isEmpty()) {
+                if (selectedType.equals(model.getFileType())) {
+                    selectedPosition = position;
                 }
             }
 
-            holder.rdBtn.setChecked(selected_position == position);
+            holder.rdBtn.setChecked(selectedPosition == position);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,7 +67,7 @@ public class RadioAdapter extends RecyclerView.Adapter<RadioAdapter.RadioAdapter
         this.listener = mListener;
     }
 
-    public class RadioAdapterVH extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class RadioAdapterVH extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private RadioButton rdBtn;
 
@@ -86,12 +85,12 @@ public class RadioAdapter extends RecyclerView.Adapter<RadioAdapter.RadioAdapter
         @Override
         public void onClick(View view) {
             try {
-                notifyItemChanged(selected_position);
-                selected_position = getAdapterPosition();
-                notifyItemChanged(selected_position);
-                pipeSizeType = "";
-                machineListInterface.onSelect("", list.get(selected_position).getFileType(),
-                        "", list.get(selected_position).getPDFFile());
+                notifyItemChanged(selectedPosition);
+                selectedPosition = getAdapterPosition();
+                notifyItemChanged(selectedPosition);
+                selectedType = "";
+                machineListInterface.onSelect("", list.get(selectedPosition).getFileType(),
+                        "", list.get(selectedPosition).getPDFFile());
             } catch (Exception e) {
                 e.printStackTrace();
             }

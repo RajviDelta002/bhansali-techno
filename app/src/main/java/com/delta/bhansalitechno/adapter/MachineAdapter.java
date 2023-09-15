@@ -1,5 +1,6 @@
 package com.delta.bhansalitechno.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,41 +19,40 @@ import java.util.ArrayList;
 
 public class MachineAdapter extends RecyclerView.Adapter<MachineAdapter.ViewHolder> {
 
-    Context context;
-    ArrayList<MachineModel> list;
-    MachineListInterface machineListInterface;
-    int selected_position = -1;
-    String pipeSizeType;
+    private final ArrayList<MachineModel> list;
+    private final MachineListInterface machineListInterface;
+    private int selectedPosition = -1;
+    private String selectedType;
 
-    public MachineAdapter(Context context, ArrayList<MachineModel> list, String pipeSizeType, MachineListInterface textListInterface) {
-        this.context = context;
+    public MachineAdapter(ArrayList<MachineModel> list, String selectedType, MachineListInterface textListInterface) {
         this.list = list;
-        this.pipeSizeType = pipeSizeType;
+        this.selectedType = selectedType;
         this.machineListInterface = textListInterface;
     }
 
     @NonNull
     @Override
     public MachineAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.layout_machine, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_machine, parent, false);
         return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(@NonNull MachineAdapter.ViewHolder holder, int position) {
         try {
             MachineModel model = list.get(position);
-            holder.tvNumber.setText(model.getMachineNo());
-            holder.tvCode.setText(model.getMachineCode());
-            holder.tvName.setText(model.getMachineName());
+            holder.tvNumber.setText("Number : " + model.getMachineNo());
+            holder.tvCode.setText("Code        : " + model.getMachineCode());
+            holder.tvName.setText("Name       : " + model.getMachineName());
 
-            if (!pipeSizeType.isEmpty()) {
-                if (pipeSizeType.equals(model.getMachineName())) {
-                    selected_position = position;
+            if (!selectedType.isEmpty()) {
+                if (selectedType.equals(model.getMachineName())) {
+                    selectedPosition = position;
                 }
             }
 
-            holder.cbMachine.setChecked(selected_position == position);
+            holder.cbMachine.setChecked(selectedPosition == position);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -65,10 +65,10 @@ public class MachineAdapter extends RecyclerView.Adapter<MachineAdapter.ViewHold
 
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        CheckBox cbMachine;
-        TextView tvNumber;
-        TextView tvCode;
-        TextView tvName;
+        private CheckBox cbMachine;
+        private TextView tvNumber;
+        private TextView tvCode;
+        private TextView tvName;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -86,12 +86,12 @@ public class MachineAdapter extends RecyclerView.Adapter<MachineAdapter.ViewHold
         @Override
         public void onClick(View view) {
             try {
-                notifyItemChanged(selected_position);
-                selected_position = getAdapterPosition();
-                notifyItemChanged(selected_position);
-                pipeSizeType = "";
-                machineListInterface.onSelect(list.get(selected_position).getMachineId(), list.get(selected_position).getMachineName(),
-                        list.get(selected_position).getMachineNo(), list.get(selected_position).getMachineCode());
+                notifyItemChanged(selectedPosition);
+                selectedPosition = getAdapterPosition();
+                notifyItemChanged(selectedPosition);
+                selectedType = "";
+                machineListInterface.onSelect(list.get(selectedPosition).getMachineId(), list.get(selectedPosition).getMachineName(),
+                        list.get(selectedPosition).getMachineNo(), list.get(selectedPosition).getMachineCode());
             } catch (Exception e) {
                 e.printStackTrace();
             }

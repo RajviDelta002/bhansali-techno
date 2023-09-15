@@ -3,12 +3,8 @@ package com.delta.bhansalitechno.activity;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,9 +16,11 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebView;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,12 +28,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
+import androidx.appcompat.widget.ListPopupWindow;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.delta.bhansalitechno.R;
+import com.delta.bhansalitechno.adapter.ListPopupWindowAdapter;
 import com.delta.bhansalitechno.adapter.RadioAdapter;
+import com.delta.bhansalitechno.adapter.StopJobListAdapter;
 import com.delta.bhansalitechno.api.ApiUtil;
 import com.delta.bhansalitechno.bottomsheets.AppExitFragment;
 import com.delta.bhansalitechno.bottomsheets.LogoutFragment;
@@ -47,6 +49,7 @@ import com.delta.bhansalitechno.interfaces.RecyclerViewClickListener;
 import com.delta.bhansalitechno.model.JobNoModel;
 import com.delta.bhansalitechno.model.RadioModel;
 import com.delta.bhansalitechno.model.StopJobNoModel;
+import com.delta.bhansalitechno.model.TextListModel;
 import com.delta.bhansalitechno.utils.ConnectionDetector;
 import com.delta.bhansalitechno.utils.NetworkUtils;
 import com.delta.bhansalitechno.utils.PrefManager;
@@ -71,11 +74,9 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Objects;
 
 import es.voghdev.pdfviewpager.library.PDFViewPager;
@@ -87,7 +88,7 @@ import static com.delta.bhansalitechno.utils.AppConfig.API_JOB_NO;
 import static com.delta.bhansalitechno.utils.AppConfig.API_RADIO_BUTTON;
 import static com.delta.bhansalitechno.utils.AppConfig.API_START_JOB;
 import static com.delta.bhansalitechno.utils.AppConfig.API_STOP_JOB;
-import static com.delta.bhansalitechno.utils.AppConfig.API_VERSION;
+import static com.delta.bhansalitechno.utils.AppConfig.API_TEXT_LIST;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_AFOSTROPHE;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_BTM_SHT;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_EMPER;
@@ -95,7 +96,7 @@ import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0026;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0027;
 import static com.delta.bhansalitechno.utils.AppConfig.NULL;
 
-public class DashboardActivityNew extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener /*, RecyclerViewClickListener*/ {
+public class StopJobListActivity extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener {
 
     private PrefManager prefManager;
 
@@ -138,7 +139,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     String selectedJobId = "";
     String selectedJobName = "";
 
-    private android.app.AlertDialog alertDialog;
+    private AlertDialog alertDialog;
 
     String checkJobStartOrNot = "";
 
@@ -146,7 +147,11 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     private static final int IMMEDIATE_APP_UPDATE_REQ_CODE = 124;
 
     private RecyclerView rvRadioBtn;
+    private RecyclerView rvStopJObList;
     ArrayList<RadioModel> radioList = new ArrayList<>();
+    ArrayList<TextListModel> holdReasonList = new ArrayList<>();
+
+    String reasonId;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -155,12 +160,12 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         try {
             requestWindowFeature(Window.FEATURE_NO_TITLE);
             getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            setContentView(R.layout.activity_dashboard_new);
+            setContentView(R.layout.activity_stop_job_list);
 
             appUpdateManager = AppUpdateManagerFactory.create(getApplicationContext());
             checkUpdate();
 
-            prefManager = new PrefManager(DashboardActivityNew.this);
+            prefManager = new PrefManager(StopJobListActivity.this);
             rotation = 90;
 
             imgFilter = findViewById(R.id.imgFilter);
@@ -201,6 +206,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             tvRotation = findViewById(R.id.tvRotation);
 
             rvRadioBtn = findViewById(R.id.rvRadioBtn);
+            rvStopJObList = findViewById(R.id.rvStopJObList);
 
             imgFilter.setOnClickListener(this);
             tvHome.setOnClickListener(this);
@@ -222,8 +228,11 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
             pdfView = findViewById(R.id.idPDFView);
 
-            apiJobNoList();
-            //apiVersion();
+            //apiJobNoList();
+
+            //apiStartJob();
+
+            apiHoldReasonAPI();
             apiCheckStartJob();
 
             /*final ZoomLinearLayout zoomLinearLayout = (ZoomLinearLayout) findViewById(R.id.zoom_linear_layout);
@@ -259,17 +268,26 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             switch (v.getId()) {
                 case R.id.tvHome:
                     prefManager.setMachineName("");
-                    startActivity(new Intent(DashboardActivityNew.this, MachineActivity.class));
+                    startActivity(new Intent(StopJobListActivity.this, MachineActivity.class));
+                    finish();
                     break;
                 case R.id.imgFilter:
                 case R.id.tvFilter:
-                    if (lylFilter.getVisibility() == View.VISIBLE) {
+                    /*if (lylFilter.getVisibility() == View.VISIBLE) {
                         lylFilter.setVisibility(View.GONE);
                         //lylDisplayData.setVisibility(View.GONE);
                         tvFilter.setText("Show");
                     } else {
                         lylFilter.setVisibility(View.VISIBLE);
                         //lylDisplayData.setVisibility(View.VISIBLE);
+                        tvFilter.setText("Hide");
+                    }*/
+
+                    if (rvStopJObList.getVisibility() == View.VISIBLE) {
+                        rvStopJObList.setVisibility(View.GONE);
+                        tvFilter.setText("Show");
+                    } else {
+                        rvStopJObList.setVisibility(View.VISIBLE);
                         tvFilter.setText("Hide");
                     }
                     break;
@@ -292,22 +310,22 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         showErrorMessage("Please select Job No first.");
                     } else {
                         if (checkJobStartOrNot.equalsIgnoreCase("False")) {
-                            apiStartJob();
+                            //apiStartJobAPICardShow();
                         }
                     }
                     //startBtnFun();
                     //ltLogout.setVisibility(View.GONE);
                     break;
                 case R.id.imgStopBtn:
-                    stopFun();
+                    stopFun(startJobNoList, 0);
                     /*stopBtnFun();
                     lylFilter.setVisibility(View.VISIBLE);
                     imgRotation.setVisibility(View.GONE);
                     tvRotation.setVisibility(View.GONE);
                     ltLogout.setVisibility(View.VISIBLE);*/
-                    //deleteContents(new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno"));
+                    //deleteContents(new File(DashboardActivityNew.this.getExternalFilesDir("BhansaliTechno") + "/BhansaliTechno"));
                     //deleteFileCreateFolder();
-                    //deleteRecursive(new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno", file));
+                    //deleteRecursive(new File(DashboardActivityNew.this.getExternalFilesDir("BhansaliTechno") + "/BhansaliTechno", file));
                     break;
                 case R.id.imgExitScreen:
                     imgExitScreen.setVisibility(View.GONE);
@@ -360,7 +378,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     }
 
     public boolean isInternet() {
-        return new ConnectionDetector(DashboardActivityNew.this).isInternetConnected();
+        return new ConnectionDetector(StopJobListActivity.this).isInternetConnected();
     }
 
     /*@Override
@@ -375,7 +393,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
     private void openPDFView() {
         try {
-            String pathName = DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno";
+            String pathName = StopJobListActivity.this.getExternalFilesDir("BhansaliTechno").toString();
             String fileName = "";
             File directory = new File(pathName);
             File[] files = directory.listFiles();
@@ -393,16 +411,16 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             }
 
             if (!file.equals(fileName)) {
-                new DashboardActivityNew.DownloadingTask().execute();
+                new StopJobListActivity.DownloadingTask().execute();
             } else {
                 webView.setVisibility(View.GONE);
                 lylPdfShow.setVisibility(View.VISIBLE);
                 pdfViewPager.setVisibility(View.VISIBLE);
                 //imgRotation.setVisibility(View.VISIBLE);
                 tvRotation.setVisibility(View.VISIBLE);
-                pdfViewPager = new PDFViewPager(DashboardActivityNew.this, getPdfPath());
+                pdfViewPager = new PDFViewPager(StopJobListActivity.this, getPdfPath());
                 pdfViewPager.setId(R.id.pdfViewPager);
-                adapter = new PDFPagerAdapter(DashboardActivityNew.this, getPdfPath());
+                adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
                 pdfViewPager.setAdapter(adapter);
 
                 if (adapter != null && adapter.getCount() > 1) {
@@ -414,7 +432,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 lylPdfShow.addView(pdfViewPager, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
                 //lylPdfShow.setScaleX(1.25f);
                 //lylPdfShow.setScaleY(2f);
-                adapter = new PDFPagerAdapter(DashboardActivityNew.this, getPdfPath());
+                adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
                 pdfViewPager.setAdapter(adapter);
                 if (adapter != null && adapter.getCount() > 1) {
                     lylSwipe.setVisibility(View.VISIBLE);
@@ -436,6 +454,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         handler.postDelayed(runnable, 0);
                     });
                 }*/
+
                 new Handler(Looper.getMainLooper()).post(() -> {
                     handler = new Handler();
                     StartTime = SystemClock.uptimeMillis();
@@ -450,20 +469,39 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     }
 
     private String getPdfPath() {
-        File f = new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno", file);
+        File f = new File(StopJobListActivity.this.getExternalFilesDir("BhansaliTechno"), file);
         return f.getAbsolutePath();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ((PDFPagerAdapter) pdfViewPager.getAdapter()).close();
+        if (pdfViewPager.getAdapter() != null) {
+            ((PDFPagerAdapter) pdfViewPager.getAdapter()).close();
+        }
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public void onItemClick(View view, int position) {
         try {
-            if (view.getId() == R.id.rdBtn) {
+            switch (view.getId()) {
+                case R.id.btnHold:
+                    holdFun(startJobNoList, position);
+                    break;
+                case R.id.btnStop:
+                    stopFun(startJobNoList, position);
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*@Override
+    public void onItemClick(View view, int position) {
+        try {
+            if (view.getId() == R.id.rdBtn){
                 tvJobNo.setEnabled(false);
                 tvItemCode.setEnabled(false);
                 tvPlanQty.setEnabled(false);
@@ -483,14 +521,14 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
+    }*/
 
     @SuppressLint("StaticFieldLeak")
     private class DownloadingTask extends AsyncTask<String, Integer, String> {
 
         File outputFile = null;
         String fileName = file;
-        String storage = DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno";
+        String storage = StopJobListActivity.this.getExternalFilesDir("BhansaliTechno").toString();
         File folder = new File(storage);
         URL url;
 
@@ -499,7 +537,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 url = new URL(mainUrl);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-                Toast.makeText(DashboardActivityNew.this, "MalformedURL", Toast.LENGTH_SHORT).show();
+                Toast.makeText(StopJobListActivity.this, "MalformedURL", Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -510,7 +548,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 c = (HttpURLConnection) url.openConnection();
             } catch (IOException e) {
                 e.printStackTrace();
-                Toast.makeText(DashboardActivityNew.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(StopJobListActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -518,7 +556,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            progressDialog = new ProgressDialog(DashboardActivityNew.this);
+            progressDialog = new ProgressDialog(StopJobListActivity.this);
             progressDialog.setMessage("Loading...");
             progressDialog.setIndeterminate(true);
             progressDialog.setCancelable(false);
@@ -533,14 +571,14 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 if (outputFile != null) {
                     progressDialog.dismiss();
 
-                    Toast.makeText(DashboardActivityNew.this, "Document Load Successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StopJobListActivity.this, "Document Load Successfully", Toast.LENGTH_SHORT).show();
                     webView.setVisibility(View.GONE);
                     pdfViewPager.setVisibility(View.VISIBLE);
                     //imgRotation.setVisibility(View.VISIBLE);
                     tvRotation.setVisibility(View.VISIBLE);
-                    pdfViewPager = new PDFViewPager(DashboardActivityNew.this, getPdfPath());
+                    pdfViewPager = new PDFViewPager(StopJobListActivity.this, getPdfPath());
                     pdfViewPager.setId(R.id.pdfViewPager);
-                    adapter = new PDFPagerAdapter(DashboardActivityNew.this, getPdfPath());
+                    adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
                     pdfViewPager.setAdapter(adapter);
 
                     if (adapter != null && adapter.getCount() > 1) {
@@ -576,7 +614,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                     new Handler().postDelayed(() -> {
                     }, 3000);
                     c.disconnect();
-                    Toast.makeText(DashboardActivityNew.this, c.getResponseMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StopJobListActivity.this, c.getResponseMessage(), Toast.LENGTH_SHORT).show();
                     //progressDialog.dismiss();
                 }
             } catch (Exception e) {
@@ -585,7 +623,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 }, 3000);
                 c.disconnect();
                 try {
-                    Toast.makeText(DashboardActivityNew.this, c.getResponseMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(StopJobListActivity.this, c.getResponseMessage(), Toast.LENGTH_SHORT).show();
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
@@ -594,7 +632,6 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             super.onPostExecute(result);
         }
 
-        @SuppressWarnings({"ResultOfMethodCallIgnored", "StatementWithEmptyBody"})
         @Override
         protected String doInBackground(String... strings) {
             try {
@@ -603,13 +640,15 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 if (c.getResponseCode() != HttpURLConnection.HTTP_OK) {
                 } else {
                     if (!folder.exists()) {
-                        folder.mkdir();
+                        folder.mkdirs();
                     }
-                    outputFile = new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno", fileName);
+                    outputFile = new File(StopJobListActivity.this.getExternalFilesDir("BhansaliTechno"), fileName);
+
                     //outputFile = new File(fileName);
                     if (!outputFile.exists()) {
                         outputFile.createNewFile();
                     }
+
                     int fileLength = c.getContentLength();
                     FileOutputStream fos = new FileOutputStream(outputFile);
                     InputStream is = c.getInputStream();
@@ -629,7 +668,13 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 progressDialog.dismiss();
                 e.printStackTrace();
                 outputFile = null;
-                Toast.makeText(DashboardActivityNew.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                StopJobListActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(StopJobListActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                //Toast.makeText(StopJobListActivity.this, e.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
             return null;
         }
@@ -793,7 +838,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 prefManager.setHandlerTime("");
                 prefManager.setStartTime("");
 
-                startActivity(new Intent(DashboardActivityNew.this, LoginActivity.class));
+                startActivity(new Intent(StopJobListActivity.this, LoginActivity.class));
                 finish();
             });
             logoutFragment.show(getSupportFragmentManager(), "bottom_sheet");
@@ -805,7 +850,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
     private void deleteFileCreateFolder() {
         try {
-            File dir = new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno");
+            File dir = new File(StopJobListActivity.this.getExternalFilesDir("BhansaliTechno") + "/BhansaliTechno");
             if (dir.isDirectory()) {
                 String[] children = dir.list();
                 for (String child : children) {
@@ -834,7 +879,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     private void apiJobNoList() {
         try {
             if (isInternet()) {
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
                 p.setCancelable(false);
                 p.setMessage("Loading...");
                 p.show();
@@ -879,10 +924,12 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     String PendingQty = object.has("PendingQty") ? object.getString("PendingQty").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String RefNo = object.has("RefNo") ? object.getString("RefNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String PCNo = object.has("PCNo") ? object.getString("PCNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+
                                     String PartNo = object.has("PartNo") ? object.getString("PartNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String HubPartNo = object.has("HubPartNo") ? object.getString("HubPartNo").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String Size = object.has("Size") ? object.getString("Size").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String Desc = object.has("Desc") ? object.getString("Desc").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
+
                                     String Status = object.has("Status") ? object.getString("Status").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String HoldReasonTextListId = object.has("HoldReasonTextListId") ? object.getString("HoldReasonTextListId").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
                                     String HoldReason = object.has("HoldReason") ? object.getString("HoldReason").replace(KEY_U0026, KEY_EMPER).replace(KEY_U0027, KEY_AFOSTROPHE) : NULL;
@@ -998,14 +1045,14 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
     private void showErrorMessage(String message) {
         final MessageFragment m = new MessageFragment(message);
-        new Handler(Looper.myLooper()).post(() -> m.show(DashboardActivityNew.this.getSupportFragmentManager(), KEY_BTM_SHT));
+        new Handler(Looper.myLooper()).post(() -> m.show(StopJobListActivity.this.getSupportFragmentManager(), KEY_BTM_SHT));
     }
 
     private void showNoInternet() {
         final NoInternetFragment n = new NoInternetFragment(() -> {
 
         });
-        new Handler(Looper.myLooper()).post(() -> n.show(DashboardActivityNew.this.getSupportFragmentManager(), KEY_BTM_SHT));
+        new Handler(Looper.myLooper()).post(() -> n.show(StopJobListActivity.this.getSupportFragmentManager(), KEY_BTM_SHT));
     }
 
     private void apiCheckStartJob() {
@@ -1013,13 +1060,14 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             if (isInternet()) {
                 checkJobNoList.clear();
 
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
                 p.setCancelable(false);
                 p.setMessage("Loading...");
                 p.show();
 
                 HashMap<String, RequestBody> map = new HashMap<>();
-                map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                //map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                map.put("data", NetworkUtils.createPartFromString(prefManager.getJobListArray()));
                 map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
                 map.put("UserId", NetworkUtils.createPartFromString(prefManager.getUserId()));
 
@@ -1080,15 +1128,15 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                 tvPlanQty.setText(String.format("%.0f", Double.parseDouble(checkJobNoList.get(0).getPendingQty())));
                             }
 
-                            tvJobNo.setText(prefManager.getJobNo());
-                            tvShopName.setText("Shop : " + prefManager.getShop());
-                            tvItemCodeShow.setText("Shop : " + prefManager.getShop());
-                            tvGroupShow.setText("Machine : " + prefManager.getMachine());
-                            tvMachineName.setText("Machine : " + prefManager.getMachine());
-                            tvDrawingNoShow.setText("Process : " + prefManager.getProcess());
-                            tvProcessName.setText("Process : " + prefManager.getProcess());
-                            tvItemCode.setText(prefManager.getItmName());
-                            tvPlanQty.setText(prefManager.getPlanQty());
+                            //tvJobNo.setText(prefManager.getJobNo());
+                            //tvShopName.setText("Shop : " + prefManager.getShop());
+                            //tvItemCodeShow.setText("Shop : " + prefManager.getShop());
+                            //tvGroupShow.setText("Machine : " + prefManager.getMachine());
+                            //tvMachineName.setText("Machine : " + prefManager.getMachine());
+                            //tvDrawingNoShow.setText("Process : " + prefManager.getProcess());
+                            //tvProcessName.setText("Process : " + prefManager.getProcess());
+                            //tvItemCode.setText(prefManager.getItmName());
+                            //tvPlanQty.setText(prefManager.getPlanQty());
 
                             tvJobNo.setEnabled(false);
                             tvItemCode.setEnabled(false);
@@ -1097,7 +1145,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             lylFilter.setVisibility(View.GONE);
                             imgStartBtn.setVisibility(View.GONE);
                             lylStop.setVisibility(View.GONE);
-                            lylDisplayData.setVisibility(View.VISIBLE);
+                            //lylDisplayData.setVisibility(View.VISIBLE);
+                            lylDisplayData.setVisibility(View.GONE);
                             pdfView.setVisibility(View.GONE);
                             ltLogout.setVisibility(View.GONE);
 
@@ -1106,7 +1155,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                             openPDFView();
 
-                            apiRadioBtnList();
+                            apiStartJobAPICardShow();
+
+                            //apiRadioBtnList();
                         } catch (JSONException e) {
                             if (p.isShowing()) {
                                 p.dismiss();
@@ -1123,6 +1174,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         checkJobStartOrNot = "False";
+                        prefManager.setJobListArray("");
+                        startActivity(new Intent(StopJobListActivity.this, StartJobListActivity.class));
+                        finish();
                         //showErrorMessage(message);
                     }
 
@@ -1167,10 +1221,10 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void apiStartJob() {
+    private void apiStartJobAPICardShow() {
         try {
             if (isInternet()) {
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
                 p.setCancelable(false);
                 p.setMessage("Loading...");
                 p.show();
@@ -1178,7 +1232,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 startJobNoList.clear();
 
                 HashMap<String, RequestBody> map = new HashMap<>();
-                map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                //map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                map.put("data", NetworkUtils.createPartFromString(prefManager.getJobListArray()));
                 map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
                 map.put("UserId", NetworkUtils.createPartFromString(prefManager.getUserId()));
 
@@ -1231,18 +1286,22 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty, RefNo, PCNo, PartNo, HubPartNo, Size, Desc, Status,HoldReasonTextListId,HoldReason,JobStartStopRemarks,false);
+                                            ItmName, ShopName, MachineName, PDFFile, DoneQty, PendingQty, RefNo, PCNo, PartNo, HubPartNo, Size, Desc, Status, HoldReasonTextListId, HoldReason, JobStartStopRemarks, false);
                                     startJobNoList.add(noModel);
                                 }
+
+                                stopDataSetIntoUI();
+
+                                apiRadioBtnList();
 
                                 tvJobNo.setEnabled(false);
                                 tvItemCode.setEnabled(false);
                                 tvPlanQty.setEnabled(false);
-                                tvHome.setVisibility(View.GONE);
+                                tvHome.setVisibility(View.VISIBLE);// Advance Visible
                                 lylFilter.setVisibility(View.GONE);
                                 imgStartBtn.setVisibility(View.GONE);
                                 lylStop.setVisibility(View.GONE);
-                                lylDisplayData.setVisibility(View.VISIBLE);
+                                lylDisplayData.setVisibility(View.GONE);
                                 pdfView.setVisibility(View.GONE);
                                 ltLogout.setVisibility(View.GONE);
 
@@ -1250,8 +1309,6 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                 mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
                                 file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                                 openPDFView();
-
-                                apiRadioBtnList();
 
                                 //String urlPdf = "https://drive.google.com/viewerng/viewer?embedded=true&url=" +startJobNoList.get(0).getPdfFile();
                                 //webView(urlPdf);
@@ -1271,7 +1328,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage(message);
+                        //apiCheckStartJob();
+                        //tvHome.setVisibility(View.VISIBLE);// Advance Visible
+                        //showErrorMessage(message);
                     }
 
                     @Override
@@ -1279,7 +1338,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage("Null Response");
+                        Toast.makeText(StopJobListActivity.this, "Null Response", Toast.LENGTH_SHORT).show();
+                        //showErrorMessage("Null Response");
                     }
 
                     @Override
@@ -1287,7 +1347,9 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage(error);
+                        Toast.makeText(StopJobListActivity.this, error, Toast.LENGTH_SHORT).show();
+
+                        //showErrorMessage(error);
                     }
 
                     @Override
@@ -1295,7 +1357,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage(String.valueOf(responseCode));
+                        Toast.makeText(StopJobListActivity.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(String.valueOf(responseCode));
                     }
 
                     @Override
@@ -1303,7 +1366,8 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage(t.getLocalizedMessage());
+                        Toast.makeText(StopJobListActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        //showErrorMessage(t.getLocalizedMessage());
                     }
                 }).request();
             } else {
@@ -1315,27 +1379,52 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void apiStopJob(String qty, String remarks) {
+    private void stopDataSetIntoUI() {
+        try {
+            StopJobListAdapter startJobListAdapter = new StopJobListAdapter(startJobNoList);
+            rvStopJObList.setLayoutManager(new LinearLayoutManager(StopJobListActivity.this, LinearLayoutManager.HORIZONTAL, false));
+            rvStopJObList.setItemAnimator(new DefaultItemAnimator());
+            rvStopJObList.setFocusable(false);
+            rvStopJObList.setAdapter(startJobListAdapter);
+            startJobListAdapter.setItemClick(this);
+            rvStopJObList.setVisibility(View.VISIBLE);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void apiStopJob(String jobListId, String qty, String remarks, String status, String acceptedQty, String holdReason) {
         try {
             if (isInternet()) {
                 stopJobNoList.clear();
 
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
                 p.setCancelable(false);
                 p.setMessage("Loading...");
                 p.show();
 
                 HashMap<String, RequestBody> map = new HashMap<>();
-                map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                //map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                map.put("JobListId", NetworkUtils.createPartFromString(jobListId));
                 map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
                 map.put("UserId", NetworkUtils.createPartFromString(prefManager.getUserId()));
                 map.put("Qty", NetworkUtils.createPartFromString(qty));
                 map.put("Remarks", NetworkUtils.createPartFromString(remarks));
+                map.put("Status", NetworkUtils.createPartFromString(status));
+                map.put("AcceptedQty", NetworkUtils.createPartFromString(acceptedQty));
+                map.put("HoldReason", NetworkUtils.createPartFromString(holdReason));
 
                 new ApiUtil(this, API_STOP_JOB, map, null, new OnResponse() {
                     @Override
                     public void onSuccess(JSONArray jsonArray) {
                         try {
+                            apiCheckStartJob();
+
+                            /*prefManager.setJobListArray("");
+                            startActivity(new Intent(StopJobListActivity.this, StartJobListActivity.class));
+                            finish();*/
+
+
                             /*if (jsonArray.length() > 0) {
                                 for (int i = 0; i < jsonArray.length(); i++) {
                                     JSONObject object = jsonArray.getJSONObject(i);
@@ -1375,7 +1464,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             }*/
 
                             //deleteFileCreateFolder();
-                            //deleteEmptyFolder(new File(DashboardActivityNew.this.getExternalFilesDir(null) + "/BhansaliTechno"));
+                            //deleteEmptyFolder(new File(DashboardActivityNew.this.getExternalFilesDir("BhansaliTechno") + "/BhansaliTechno"));
 
                             alertDialog.dismiss();
 
@@ -1401,10 +1490,10 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             webView.setVisibility(View.GONE);
                             pdfView.setVisibility(View.GONE);
                             handler.removeCallbacksAndMessages(null);
-                            lylFilter.setVisibility(View.VISIBLE);
+                            lylFilter.setVisibility(View.GONE); //Advance Commit
                             tvHome.setVisibility(View.VISIBLE);
                             imgRotation.setVisibility(View.GONE);
-                            tvRotation.setVisibility(View.GONE);
+                            tvRotation.setVisibility(View.VISIBLE);
                             ltLogout.setVisibility(View.VISIBLE);
                             rvRadioBtn.setVisibility(View.GONE);
                             radioList.clear();
@@ -1419,16 +1508,18 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             prefManager.setHandlerTime("");
                             prefManager.setStartTime("");
 
-                            Toast.makeText(DashboardActivityNew.this, "Job Done Success.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(StopJobListActivity.this, "Job Done Success.", Toast.LENGTH_SHORT).show();
 
-                            apiJobNoList();
+                            //apiJobNoList();
+
+                            //apiStartJobAPICardShow(); //Comment 08-09-2023
                         } catch (Exception e) {
                             if (p.isShowing()) {
                                 p.dismiss();
                             }
                             alertDialog.dismiss();
                             e.printStackTrace();
-                            showErrorMessage(e.getLocalizedMessage());
+                            //showErrorMessage(e.getLocalizedMessage());
                             FirebaseCrashlytics.getInstance().recordException(e);
                         }
                     }
@@ -1438,148 +1529,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
-                        showErrorMessage(message);
-                    }
-
-                    @Override
-                    public void onNullResponse() {
-                        if (p.isShowing()) {
-                            p.dismiss();
-                        }
-                        showErrorMessage("Null Response");
-                    }
-
-                    @Override
-                    public void onExceptionFired(String error) {
-                        if (p.isShowing()) {
-                            p.dismiss();
-                        }
-                        showErrorMessage(error);
-                    }
-
-                    @Override
-                    public void on400(int responseCode) {
-                        if (p.isShowing()) {
-                            p.dismiss();
-                        }
-                        showErrorMessage(String.valueOf(responseCode));
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Throwable t) {
-                        if (p.isShowing()) {
-                            p.dismiss();
-                        }
-                        showErrorMessage(t.getLocalizedMessage());
-                    }
-                }).request();
-            } else {
-                showNoInternet();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            FirebaseCrashlytics.getInstance().recordException(e);
-        }
-    }
-
-    private void stopFun() {
-        View confirmDialog = LayoutInflater.from(DashboardActivityNew.this).inflate(R.layout.layout_stop_dlg, null);
-        AppCompatButton btnYes = confirmDialog.findViewById(R.id.btnYes);
-        AppCompatButton btnNo = confirmDialog.findViewById(R.id.btnNo);
-
-        EditText edtProductionQty = confirmDialog.findViewById(R.id.edtProductionQty);
-        EditText edtRemarks = confirmDialog.findViewById(R.id.edtRemarks);
-
-        final android.app.AlertDialog.Builder alert = new android.app.AlertDialog.Builder(DashboardActivityNew.this);
-        alert.setView(confirmDialog);
-        //alert.setTitle("Password");
-        //Creating an alert dialog
-        alertDialog = alert.create();
-        alertDialog.show();
-        alertDialog.setCancelable(false);
-        btnYes.setOnClickListener(view -> {
-            if (edtProductionQty.getText().toString().isEmpty()) {
-                Toast.makeText(DashboardActivityNew.this, "Please enter production quantity.", Toast.LENGTH_SHORT).show();
-            } else if (Double.parseDouble(edtProductionQty.getText().toString().trim()) > Double.parseDouble(tvPlanQty.getText().toString().trim())) {
-                Toast.makeText(DashboardActivityNew.this, "Quantity can't be greater than available quantity.", Toast.LENGTH_SHORT).show();
-            } else {
-                apiStopJob(edtProductionQty.getText().toString().trim(), edtRemarks.getText().toString().trim());
-            }
-        });
-        btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
-    }
-
-    private void apiVersion() {
-        try {
-            if (isInternet()) {
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
-                p.setCancelable(false);
-                p.setMessage("Loading...");
-                p.show();
-
-                new ApiUtil(DashboardActivityNew.this, API_VERSION, null, null, new OnResponse() {
-                    @Override
-                    public void onSuccess(JSONArray array) {
-                        try {
-                            if (p.isShowing()) {
-                                p.dismiss();
-                            }
-                            if (array.length() > 0) {
-                                for (int i = 0; i < array.length(); i++) {
-                                    JSONObject object = array.getJSONObject(i);
-                                    try {
-                                        //Getting Version From API
-                                        String version = object.getString("FacetText").replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
-
-                                        //Getting Version From Application
-                                        PackageInfo pInfo = DashboardActivityNew.this.getPackageManager().getPackageInfo(getPackageName(), 0);
-                                        String appVersion = pInfo.versionName;
-
-                                        if (!appVersion.equalsIgnoreCase(version)) {
-
-                                            AlertDialog.Builder a = new AlertDialog.Builder(DashboardActivityNew.this);
-                                            //a.setIcon(getResources().getDrawable(R.mipmap.ic_launcher));
-                                            a.setTitle("Here’s an update on your app.");
-                                            a.setMessage("We have updated new app in playstore to make a better experience for you. Please download it from Playstore.");
-                                            //a.setTitle("DN Construction Inventory Update Found !!");
-                                            //a.setMessage("Please, update app from play store to get latest version of app.");
-                                            a.setCancelable(false);
-
-                                            a.setPositiveButton("OK", (dialog, which) -> {
-                                                try {
-                                                    DashboardActivityNew.this.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("market://details?id=" + DashboardActivityNew.this.getPackageName())));
-                                                } catch (ActivityNotFoundException e) {
-                                                    DashboardActivityNew.this.startActivity(new Intent("android.intent.action.VIEW", Uri.parse("https://play.google.com/store/apps/details?id=" + DashboardActivityNew.this.getPackageName())));
-                                                    FirebaseCrashlytics.getInstance().recordException(e);
-                                                }
-                                            });
-
-                                        /*a.setNegativeButton("Keep This Version", (dialog, i1) -> {
-                                            dialog.cancel();
-                                        });*/
-
-                                            AlertDialog alertDialog = a.create();
-                                            alertDialog.setCanceledOnTouchOutside(false);
-                                            alertDialog.setCancelable(false);
-                                            alertDialog.show();
-                                        }
-                                    } catch (PackageManager.NameNotFoundException e) {
-                                        e.printStackTrace();
-                                        FirebaseCrashlytics.getInstance().recordException(e);
-                                    }
-                                }
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            FirebaseCrashlytics.getInstance().recordException(e);
-                        }
-                    }
-
-                    @Override
-                    public void on209(String message) {
-                        if (p.isShowing()) {
-                            p.dismiss();
-                        }
+                        Toast.makeText(StopJobListActivity.this, message, Toast.LENGTH_SHORT).show();
                         //showErrorMessage(message);
                     }
 
@@ -1588,6 +1538,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                         if (p.isShowing()) {
                             p.dismiss();
                         }
+                        Toast.makeText(StopJobListActivity.this, "Null Response", Toast.LENGTH_SHORT).show();
                         //showErrorMessage("Null Response");
                     }
 
@@ -1597,6 +1548,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         //showErrorMessage(error);
+                        Toast.makeText(StopJobListActivity.this, error, Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -1605,6 +1557,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         //showErrorMessage(String.valueOf(responseCode));
+                        Toast.makeText(StopJobListActivity.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -1613,6 +1566,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         //showErrorMessage(t.getLocalizedMessage());
+                        Toast.makeText(StopJobListActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                     }
                 }).request();
             } else {
@@ -1624,31 +1578,99 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void totalTimeGet(String startTime, String stopTime) {
+    private void stopFun(ArrayList<JobNoModel> list, int pos) {
         try {
-            String one = Utils.ConvertDateFormat(startTime, "dd-MM-yyyy hh:mm:ss", "dd-MM-yyyy hh:mm:ss");
-            String two = Utils.ConvertDateFormat(stopTime, "dd-MM-yyyy hh:mm:ss", "dd-MM-yyyy hh:mm:ss");
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
-            Date date1 = simpleDateFormat.parse(one);//13:04:53
-            Date date2 = simpleDateFormat.parse(two);//12:33:40"
+            View confirmDialog = LayoutInflater.from(StopJobListActivity.this).inflate(R.layout.layout_stop_dlg, null);
+            AppCompatButton btnYes = confirmDialog.findViewById(R.id.btnYes);
+            AppCompatButton btnNo = confirmDialog.findViewById(R.id.btnNo);
 
-            //long difference = date2.getTime() - date1.getTime();
-            //int days = (int) (difference / (1000 * 60 * 60 * 24));
-            //int hours = (int) ((difference - (1000 * 60 * 60 * 24 * days)) / (1000 * 60 * 60));
-            //int min = (int) (difference - (1000 * 60 * 60 * 24 * days) - (1000 * 60 * 60 * hours)) / (1000 * 60);
-            //hours = (hours < 0 ? -hours : hours);
-            //Log.i("======= Hours", " :: " + hours);
+            EditText edtProductionQty = confirmDialog.findViewById(R.id.edtProductionQty);
+            EditText edtAcceptProductionQty = confirmDialog.findViewById(R.id.edtAcceptProductionQty);
+            edtAcceptProductionQty.setText("0");
+            EditText edtRemarks = confirmDialog.findViewById(R.id.edtRemarks);
 
-            long millse = date2.getTime() - date1.getTime();
-            long mills = Math.abs(millse);
-            int Hours = (int) (mills / (1000 * 60 * 60));
-            int Mins = (int) (mills / (1000 * 60)) % 60;
-            long Secs = (int) (mills / 1000) % 60;
-
-            Toast.makeText(this, "Total Job Time : " + String.valueOf(Hours) + "hour" + String.valueOf(Mins) + "Mins", Toast.LENGTH_SHORT).show();
-        } catch (ParseException e) {
+            final AlertDialog.Builder alert = new AlertDialog.Builder(StopJobListActivity.this);
+            alert.setView(confirmDialog);
+            //alert.setTitle("Password");
+            //Creating an alert dialog
+            alertDialog = alert.create();
+            alertDialog.show();
+            alertDialog.setCancelable(true);
+            btnYes.setOnClickListener(view -> {
+                if (edtProductionQty.getText().toString().isEmpty()) {
+                    Toast.makeText(StopJobListActivity.this, "Please enter production quantity.", Toast.LENGTH_SHORT).show();
+                } else if (edtAcceptProductionQty.getText().toString().isEmpty()) {
+                    Toast.makeText(StopJobListActivity.this, "Please enter acceptance quantity.", Toast.LENGTH_SHORT).show();
+                } else if (Double.parseDouble(edtProductionQty.getText().toString().trim()) > Double.parseDouble(tvPlanQty.getText().toString().trim())) {
+                    Toast.makeText(StopJobListActivity.this, "Quantity can't be greater than available quantity.", Toast.LENGTH_SHORT).show();
+                } else if (Double.parseDouble(edtProductionQty.getText().toString().trim())
+                        + Double.parseDouble(edtAcceptProductionQty.getText().toString().trim()) > Double.parseDouble(list.get(pos).getPendingQty())) {
+                    Toast.makeText(StopJobListActivity.this, "Quantity and accepted qty can't be greater than available quantity.", Toast.LENGTH_SHORT).show();
+                } else {
+                    apiStopJob(list.get(pos).getJobListId(), edtProductionQty.getText().toString().trim(),
+                            edtRemarks.getText().toString().trim(), "Stop", edtAcceptProductionQty.getText().toString().trim(), "");
+                }
+            });
+            btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
+        } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void holdFun(ArrayList<JobNoModel> list, int pos) {
+        try {
+            reasonId = "";
+
+            View confirmDialog = LayoutInflater.from(StopJobListActivity.this).inflate(R.layout.layout_hold_dlg, null);
+            AppCompatButton btnYes = confirmDialog.findViewById(R.id.btnYes);
+            AppCompatButton btnNo = confirmDialog.findViewById(R.id.btnNo);
+
+            TextView dropdownValue = confirmDialog.findViewById(R.id.edtHoldReason1);
+
+            final AlertDialog.Builder alert = new AlertDialog.Builder(StopJobListActivity.this);
+            alert.setView(confirmDialog);
+            //alert.setTitle("Password");
+            //Creating an alert dialog
+            alertDialog = alert.create();
+            alertDialog.show();
+            alertDialog.setCancelable(true);
+            dropdownValue.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ListPopupWindow listPopupWindow = createListPopupWindow(dropdownValue, holdReasonList);
+                    listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+                            reasonId = holdReasonList.get(pos).getId();
+                            dropdownValue.setText(holdReasonList.get(pos).getName());
+                            listPopupWindow.dismiss();
+                        }
+                    });
+                    listPopupWindow.show();
+                }
+            });
+            btnYes.setOnClickListener(view -> {
+                if (dropdownValue.getText().toString().isEmpty()) {
+                    Toast.makeText(StopJobListActivity.this, "Please select hold reason.", Toast.LENGTH_SHORT).show();
+                } else {
+                    //apiStopJob(dropdownValue.getText().toString().trim(), "");
+                    apiStopJob(list.get(pos).getJobListId(), "",
+                            "", "Hold", "", reasonId);
+                }
+            });
+            btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private ListPopupWindow createListPopupWindow(View anchor, List<TextListModel> items) {
+        final ListPopupWindow popup = new ListPopupWindow(StopJobListActivity.this);
+        ListAdapter adapter = new ListPopupWindowAdapter(items);
+        popup.setAnchorView(anchor);
+        popup.setWidth(((View) anchor.getParent()).getWidth() / 2);
+        popup.setAdapter(adapter);
+        return popup;
     }
 
     @Override
@@ -1673,7 +1695,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     private void apiRadioBtnList() {
         try {
             if (isInternet()) {
-                ProgressDialog p = new ProgressDialog(DashboardActivityNew.this);
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
                 p.setCancelable(false);
                 p.setMessage("Loading...");
                 p.show();
@@ -1682,7 +1704,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
 
                 HashMap<String, RequestBody> map = new HashMap<>();
                 map.put("EmpId", NetworkUtils.createPartFromString(prefManager.getUserName()));
-                map.put("JobListId", NetworkUtils.createPartFromString(prefManager.getJobId()));
+                map.put("data", NetworkUtils.createPartFromString(prefManager.getJobListArray()));
                 map.put("UserId", NetworkUtils.createPartFromString(prefManager.getUserId()));
 
                 new ApiUtil(this, API_RADIO_BUTTON, map, null, new OnResponse() {
@@ -1715,16 +1737,20 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                     radioList.add(model);
                                 }
                                 rvRadioBtn.setVisibility(View.VISIBLE);
-                                RadioAdapter pipeSizeTypeAdapter = new RadioAdapter(radioList, "", (id, name, no, code) -> {
-                                    //Code == Url
+                                RadioAdapter radioAdapter = new RadioAdapter(radioList, "", (id, name, no, code) -> {
+                                    //String urlPdf = code;
                                     mainUrl = code.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
                                     file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                                     openPDFView();
                                 });
-                                LinearLayoutManager mManager = new LinearLayoutManager(DashboardActivityNew.this, LinearLayoutManager.HORIZONTAL, false);
+                                LinearLayoutManager mManager = new LinearLayoutManager(StopJobListActivity.this, LinearLayoutManager.HORIZONTAL, false);
                                 rvRadioBtn.setLayoutManager(mManager);
-                                rvRadioBtn.setAdapter(pipeSizeTypeAdapter);
-                                setDataIntoUI();
+                                rvRadioBtn.setAdapter(radioAdapter);
+
+                                String urlPdf = radioList.get(0).getPDFFile();
+                                mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
+                                file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
+                                openPDFView();
                             }
                         } catch (JSONException e) {
                             if (p.isShowing()) {
@@ -1742,7 +1768,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         rvRadioBtn.setVisibility(View.GONE);
-                        Toast.makeText(DashboardActivityNew.this, message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, message, Toast.LENGTH_SHORT).show();
                         //showErrorMessage(message);
                     }
 
@@ -1752,7 +1778,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         rvRadioBtn.setVisibility(View.GONE);
-                        Toast.makeText(DashboardActivityNew.this, "Null Response", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, "Null Response", Toast.LENGTH_SHORT).show();
                         //showErrorMessage("Null Response");
                     }
 
@@ -1762,7 +1788,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         rvRadioBtn.setVisibility(View.GONE);
-                        Toast.makeText(DashboardActivityNew.this, error, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, error, Toast.LENGTH_SHORT).show();
                         //showErrorMessage(error);
                     }
 
@@ -1772,7 +1798,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         rvRadioBtn.setVisibility(View.GONE);
-                        Toast.makeText(DashboardActivityNew.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
                         //showErrorMessage(String.valueOf(responseCode));
                     }
 
@@ -1782,7 +1808,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             p.dismiss();
                         }
                         rvRadioBtn.setVisibility(View.GONE);
-                        Toast.makeText(DashboardActivityNew.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                         //showErrorMessage(t.getLocalizedMessage());
                     }
                 }).request();
@@ -1795,36 +1821,58 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         }
     }
 
-    private void setDataIntoUI() {
+    private void apiHoldReasonAPI() {
         try {
-            if (radioList.size() > 0) {
-                rvRadioBtn.setVisibility(View.VISIBLE);
-                LinearLayoutManager mManager = new LinearLayoutManager(DashboardActivityNew.this, LinearLayoutManager.HORIZONTAL, false);
-                rvRadioBtn.setLayoutManager(mManager);
-                RadioAdapter customerAdapter = new RadioAdapter(radioList);
-                customerAdapter.setItemClick(this);
-                rvRadioBtn.setAdapter(customerAdapter);
+            holdReasonList.clear();
 
-                tvJobNo.setEnabled(false);
-                tvItemCode.setEnabled(false);
-                tvPlanQty.setEnabled(false);
-                tvHome.setVisibility(View.GONE);
-                lylFilter.setVisibility(View.GONE);
-                imgStartBtn.setVisibility(View.GONE);
-                lylStop.setVisibility(View.GONE);
-                lylDisplayData.setVisibility(View.VISIBLE);
-                pdfView.setVisibility(View.GONE);
-                ltLogout.setVisibility(View.GONE);
+            HashMap<String, RequestBody> map = new HashMap<>();
+            map.put("Group", NetworkUtils.createPartFromString("Job Hold Reason"));
 
-                String urlPdf = startJobNoList.get(0).getPdfFile();
-                mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
-                file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
-                openPDFView();
-            } else {
-                rvRadioBtn.setVisibility(View.GONE);
-            }
+            new ApiUtil(StopJobListActivity.this, API_TEXT_LIST, map, null, new OnResponse() {
+                @Override
+                public void onSuccess(JSONArray jsonArray) {
+                    try {
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject object = jsonArray.getJSONObject(i);
+                            String LocId = Utils.getReplacedString(object.has("TextListId") ? object.getString("TextListId") : NULL);
+                            String Name = Utils.getReplacedString(object.has("Text") ? object.getString("Text") : NULL);
+                            TextListModel textListModel = new TextListModel(LocId, Name);
+                            holdReasonList.add(textListModel);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        FirebaseCrashlytics.getInstance().recordException(e);
+                    }
+                }
+
+                @Override
+                public void on209(String message) {
+                    Toast.makeText(StopJobListActivity.this, message, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onNullResponse() {
+                    Toast.makeText(StopJobListActivity.this, "Null Response", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onExceptionFired(String error) {
+                    Toast.makeText(StopJobListActivity.this, error, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void on400(int responseCode) {
+                    Toast.makeText(StopJobListActivity.this, String.valueOf(responseCode), Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onFailure(@NonNull Throwable t) {
+                    Toast.makeText(StopJobListActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }).request();
         } catch (Exception e) {
             e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 }

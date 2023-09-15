@@ -185,6 +185,24 @@
                 android:textSize="@dimen/_10sdp"
                 tools:ignore="HardcodedText" />
 
+            <TextView
+                android:id="@+id/tvRotation1"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/_15sdp"
+                android:layout_marginStart="@dimen/_5sdp"
+                android:background="@drawable/edittext_bg"
+                android:backgroundTint="#0097ff"
+                android:drawableEnd="@drawable/ic_rotation"
+                android:drawablePadding="@dimen/_5sdp"
+                android:fontFamily="@font/gilroy_semibold"
+                android:gravity="center"
+                android:paddingHorizontal="@dimen/_5sdp"
+                android:text="Rotation"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_10sdp"
+                android:visibility="gone"
+                tools:ignore="HardcodedText" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -193,7 +211,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/_2sdp"
             android:orientation="horizontal"
-            android:visibility="visible"
+            android:visibility="gone"
             tools:ignore="DisableBaselineAlignment">
 
             <com.google.android.material.textfield.TextInputLayout
@@ -474,17 +492,26 @@
 
         </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvRadioBtn"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:visibility="gone"
-            android:layout_height="wrap_content"/>
-
-        <include android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:visibility="gone"
-            layout="@layout/layout_stop_job_list"/>
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvStopJObList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRadioBtn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:visibility="gone" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/lylSwipe"

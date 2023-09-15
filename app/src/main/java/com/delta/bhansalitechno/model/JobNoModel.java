@@ -80,11 +80,33 @@ public class JobNoModel {
     @SerializedName("PCNo")
     @Expose
     private String pCNo;
+    @SerializedName("PartNo")
+    @Expose
+    private String partNo;
+    @SerializedName("HubPartNo")
+    @Expose
+    private String hubPartNo;
+    @SerializedName("Size")
+    @Expose
+    private String size;
+    @SerializedName("Desc")
+    @Expose
+    private String desc;
+    @SerializedName("Status")
+    @Expose
+    private String status;
+    @SerializedName("HoldReasonTextListId")
+    @Expose
+    private String holdReasonTextListId;
+    @SerializedName("HoldReason")
+    @Expose
+    private String holdReason;
+    @SerializedName("JobStartStopRemarks")
+    @Expose
+    private String jobStartStopRemarks;
+    private boolean isItemSelected;
 
-    public JobNoModel(String jobListId, String jobNo, String dt, String employeeId, String processId, String itmId, String startDateTime,
-                      String endDateTime, String cycleTime, String qty, String remarks, String insertedOn, String lastUpdatedOn,
-                      String insertedByUserId, String lastUpdatedByUserId, String employeeName, String processName, String itmName,
-                      String shopName, String machineName, String pdfFile, String doneQty, String pendingQty, String refNo, String pCNo) {
+    public JobNoModel(String jobListId, String jobNo, String dt, String employeeId, String processId, String itmId, String startDateTime, String endDateTime, String cycleTime, String qty, String remarks, String insertedOn, String lastUpdatedOn, String insertedByUserId, String lastUpdatedByUserId, String employeeName, String processName, String itmName, String shopName, String machineName, String pdfFile, String doneQty, String pendingQty, String refNo, String pCNo, String partNo, String hubPartNo, String size, String desc, String status, String holdReasonTextListId, String holdReason, String jobStartStopRemarks, boolean isItemSelected) {
         this.jobListId = jobListId;
         this.jobNo = jobNo;
         this.dt = dt;
@@ -110,6 +132,47 @@ public class JobNoModel {
         this.pendingQty = pendingQty;
         this.refNo = refNo;
         this.pCNo = pCNo;
+        this.partNo = partNo;
+        this.hubPartNo = hubPartNo;
+        this.size = size;
+        this.desc = desc;
+        this.status = status;
+        this.holdReasonTextListId = holdReasonTextListId;
+        this.holdReason = holdReason;
+        this.jobStartStopRemarks = jobStartStopRemarks;
+        this.isItemSelected = isItemSelected;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getHoldReasonTextListId() {
+        return holdReasonTextListId;
+    }
+
+    public void setHoldReasonTextListId(String holdReasonTextListId) {
+        this.holdReasonTextListId = holdReasonTextListId;
+    }
+
+    public String getHoldReason() {
+        return holdReason;
+    }
+
+    public void setHoldReason(String holdReason) {
+        this.holdReason = holdReason;
+    }
+
+    public String getJobStartStopRemarks() {
+        return jobStartStopRemarks;
+    }
+
+    public void setJobStartStopRemarks(String jobStartStopRemarks) {
+        this.jobStartStopRemarks = jobStartStopRemarks;
     }
 
     public String getJobListId() {
@@ -310,5 +373,45 @@ public class JobNoModel {
 
     public void setpCNo(String pCNo) {
         this.pCNo = pCNo;
+    }
+
+    public String getPartNo() {
+        return partNo;
+    }
+
+    public void setPartNo(String partNo) {
+        this.partNo = partNo;
+    }
+
+    public String getHubPartNo() {
+        return hubPartNo;
+    }
+
+    public void setHubPartNo(String hubPartNo) {
+        this.hubPartNo = hubPartNo;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
+    }
+
+    public boolean isItemSelected() {
+        return isItemSelected;
+    }
+
+    public void setItemSelected(boolean itemSelected) {
+        isItemSelected = itemSelected;
     }
 }

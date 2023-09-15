@@ -4,16 +4,12 @@ public class AppConfig {
 
     //API Link
 
-    //public static final String BASE_URL = "http://192.168.0.172/ishop/";    /*Local*/
     //public static final String BASE_URL = "http://110.227.253.77:90/DeltaiShop/";    /*Galaxy*/
-    //public static final String BASE_URL = "http://192.168.1.200/DeltaiShop/";    /*YK*/
-    //public static final String BASE_URL = "http://45.118.217.91:91/DeltaiShop/";    /*YK*/
     //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Live*/
-    //public static final String BASE_URL = "http://192.168.0.76/ishop/";    /*PM*/
+    //public static final String BASE_URL = "http://192.168.0.144/ishop/";    /*PM*/
 
     //public static final String BASE_URL = "http://103.127.146.238/DeltaiShopBhansali/";    /*Old Live*/
-    public static final String BASE_URL = "http://13.235.202.211/DeltaiShopBhansali/";    /*Live*/
-    //public static final String BASE_URL = "http://110.227.211.238/DeltaKanban";    /*Live*/
+    public static final String BASE_URL = "http://13.235.202.211/DeltaiShopBhansali/";    /*Bhanshali Live*/
     //public static final String BASE_URL = "http://110.227.211.238:91/DeltaiShop/";    /*Live*/
 
 
@@ -151,6 +147,7 @@ public class AppConfig {
     public static final String API_STOP_JOB = "API/API_StopJob.aspx";
     public static final String API_MACHINE = "API/API_MachineList.aspx";
     public static final String API_RADIO_BUTTON = "API/API_GetFileAgainstJob.aspx";
+    public static final String API_TEXT_LIST = "API/API_TextLists.aspx";
 
     //API From Duke Marketing Person App
     //public static final String LOGIN_API = "API_Login.aspx";

@@ -199,13 +199,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void init() {
         try {
-            ImageView imgAppLogo = findViewById(R.id.imgAppLogo);
-            Animation mAnimationSlide1 = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_out);
-            imgAppLogo.startAnimation(mAnimationSlide1);
+            //ImageView imgAppLogo = findViewById(R.id.imgAppLogo);
+            //Animation mAnimationSlide1 = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_out);
+            //imgAppLogo.startAnimation(mAnimationSlide1);
 
             TextView btnLogin = findViewById(R.id.btnLogin);
-            Animation mAnimationSlide = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_in);
-            btnLogin.startAnimation(mAnimationSlide);
+            //Animation mAnimationSlide = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_in);
+            //btnLogin.startAnimation(mAnimationSlide);
 
             txtUsername = findViewById(R.id.txtUsername);
             txtPassword = findViewById(R.id.txtPassword);

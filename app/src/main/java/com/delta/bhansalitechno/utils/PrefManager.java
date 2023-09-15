@@ -674,4 +674,14 @@ public class PrefManager {
     public String getSecondTime() {
         return sharedPreferences.getString("SecondTime", KEY_EMPTY_STRING);
     }
+
+    public void setJobListArray(String jobListArray) {
+        editor = sharedPreferences.edit();
+        editor.putString("JobListArray", jobListArray);
+        editor.apply();
+    }
+
+    public String getJobListArray() {
+        return sharedPreferences.getString("JobListArray", KEY_EMPTY_STRING);
+    }
 }

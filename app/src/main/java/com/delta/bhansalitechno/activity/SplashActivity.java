@@ -32,11 +32,11 @@ public class SplashActivity extends AppCompatActivity {
             setContentView(R.layout.activity_splash);
             prefManager = new PrefManager(SplashActivity.this);
 
-            ImageView imgLogo1 = findViewById(R.id.imgLogo1);
+            /*ImageView imgLogo1 = findViewById(R.id.imgLogo1);
             LinearLayout lylDeltaLogo = findViewById(R.id.lylDeltaLogo);
             Animation mAnimationSlide1 = AnimationUtils.loadAnimation(SplashActivity.this, R.anim.anim_in);
             imgLogo1.startAnimation(mAnimationSlide1);
-            lylDeltaLogo.startAnimation(mAnimationSlide1);
+            lylDeltaLogo.startAnimation(mAnimationSlide1);*/
 
             new CountDownTimer(2500, 1000) {
                 @Override
@@ -47,15 +47,22 @@ public class SplashActivity extends AppCompatActivity {
                 @Override
                 public void onFinish() {
                     if (!isFinishing()) {
-                        if (prefManager.isLoggedIn().equalsIgnoreCase("True") && !prefManager.getMachineName().isEmpty()) {
-                            startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
+                        if (prefManager.isLoggedIn().equalsIgnoreCase("True")
+                                && !prefManager.getMachineName().isEmpty()
+                                && !prefManager.getJobListArray().isEmpty()) {
+                            //startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
+                            startActivity(new Intent(SplashActivity.this, StopJobListActivity.class));
+                        }else if (prefManager.isLoggedIn().equalsIgnoreCase("True")
+                                && !prefManager.getMachineName().isEmpty()
+                                /*&& !prefManager.getJobListArray().isEmpty()*/) {
+                            //startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
+                            startActivity(new Intent(SplashActivity.this, StopJobListActivity.class));
                         } else if (prefManager.isLoggedIn().equalsIgnoreCase("True") /*&& !prefManager.getMachineName().isEmpty()*/) {
                             startActivity(new Intent(SplashActivity.this, MachineActivity.class));
                         } else {
                             startActivity(new Intent(SplashActivity.this, LoginActivity.class));
                         }
                         finish();
-
                     }
                 }
             }.start();

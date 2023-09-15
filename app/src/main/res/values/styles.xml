@@ -43,5 +43,4 @@
         <item name="android:windowExitAnimation">@anim/slide_down_dialog_fragment</item>
     </style>
 
-
 </resources>

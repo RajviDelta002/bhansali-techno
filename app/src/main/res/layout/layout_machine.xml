@@ -2,18 +2,15 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/card_view1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/_10sdp"
-    app:cardElevation="@dimen/_5sdp"
-    app:cardCornerRadius="@dimen/_10sdp">
+    android:layout_margin="@dimen/_4sdp"
+    app:cardCornerRadius="@dimen/_4sdp"
+    app:cardElevation="@dimen/_5sdp">
 
     <LinearLayout
-        android:id="@+id/lylBg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/_5sdp"
         android:layout_marginVertical="@dimen/_5sdp"
         android:background="@color/white"
         android:orientation="horizontal">
@@ -23,18 +20,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginStart="@dimen/_6sdp"
+            android:layout_marginStart="@dimen/_3sdp"
+            android:buttonTint="@color/colorPrimaryDark"
             android:checked="false"
             android:clickable="false"
-            android:buttonTint="@color/colorPrimaryDark"
             android:gravity="center|start" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginHorizontal="@dimen/_5sdp"
-            android:layout_marginVertical="@dimen/_5sdp"
             android:orientation="vertical">
 
             <TextView
@@ -42,13 +37,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="@dimen/_4sdp"
                 android:fontFamily="@font/gilroy_semibold"
                 android:gravity="center|start"
                 android:text="Number (10202)"
                 android:textColor="@color/black"
-                android:textSize="@dimen/_15sdp"
-                android:textStyle="bold"
+                android:textSize="@dimen/_12sdp"
                 tools:ignore="HardcodedText" />
 
             <TextView
@@ -56,13 +49,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginBottom="@dimen/_4sdp"
-                android:fontFamily="@font/gilroy_semibold"
+                android:fontFamily="@font/gilroy_medium"
                 android:gravity="center|start"
                 android:text="Code (102)"
                 android:textColor="@color/black"
-                android:textSize="@dimen/_13sdp"
-                android:textStyle="bold"
+                android:textSize="@dimen/_10sdp"
                 tools:ignore="HardcodedText" />
 
             <TextView
@@ -70,12 +61,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:fontFamily="@font/gilroy_semibold"
+                android:fontFamily="@font/gilroy_regular"
                 android:gravity="center|start"
                 android:text="Name"
                 android:textColor="@color/black"
                 android:textSize="@dimen/_10sdp"
-                android:textStyle="bold"
                 tools:ignore="HardcodedText" />
 
         </LinearLayout>

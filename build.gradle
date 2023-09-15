@@ -7,13 +7,6 @@ buildscript {
         jcenter()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven {
-            url "http://dl.bintray.com/amulyakhare/maven"
-        }
-        maven {
-            url  "http://dl.bintray.com/piasy/maven"
-        }
-        
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.1'
@@ -30,13 +23,6 @@ allprojects {
         jcenter()
         mavenCentral()
         maven { url "https://jitpack.io" }
-        maven {
-            url "http://dl.bintray.com/amulyakhare/maven"
-        }
-        maven {
-            url  "http://dl.bintray.com/piasy/maven"
-        }
-        
     }
 }
 
