@@ -1,22 +1,44 @@
 package com.delta.bhansalitechno.activity;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.media.ExifInterface;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -36,6 +58,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.airbnb.lottie.LottieAnimationView;
 import com.delta.bhansalitechno.R;
 import com.delta.bhansalitechno.adapter.ListPopupWindowAdapter;
+import com.delta.bhansalitechno.adapter.ListPopupWindowAdapterforlocation;
 import com.delta.bhansalitechno.adapter.RadioAdapter;
 import com.delta.bhansalitechno.adapter.StopJobListAdapter;
 import com.delta.bhansalitechno.api.ApiUtil;
@@ -47,14 +70,18 @@ import com.delta.bhansalitechno.fargments.TextListFragmentWithFilter;
 import com.delta.bhansalitechno.interfaces.OnResponse;
 import com.delta.bhansalitechno.interfaces.RecyclerViewClickListener;
 import com.delta.bhansalitechno.model.JobNoModel;
+import com.delta.bhansalitechno.model.LocationModel;
 import com.delta.bhansalitechno.model.RadioModel;
 import com.delta.bhansalitechno.model.StopJobNoModel;
 import com.delta.bhansalitechno.model.TextListModel;
+import com.delta.bhansalitechno.util.ProgressRequestBody;
 import com.delta.bhansalitechno.utils.ConnectionDetector;
+import com.delta.bhansalitechno.utils.FilePaths;
+import com.delta.bhansalitechno.utils.MoveViewTouchListener;
 import com.delta.bhansalitechno.utils.NetworkUtils;
 import com.delta.bhansalitechno.utils.PrefManager;
 import com.delta.bhansalitechno.utils.Utils;
-import com.github.barteksc.pdfviewer.PDFView;
+//import PDFView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
@@ -68,27 +95,39 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import es.voghdev.pdfviewpager.library.PDFViewPager;
 import es.voghdev.pdfviewpager.library.adapter.PDFPagerAdapter;
+import es.voghdev.pdfviewpager.library.adapter.PdfScale;
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
 
 import static com.delta.bhansalitechno.utils.AppConfig.API_CHECK_JOB_START;
 import static com.delta.bhansalitechno.utils.AppConfig.API_JOB_NO;
+import static com.delta.bhansalitechno.utils.AppConfig.API_LOCATION;
 import static com.delta.bhansalitechno.utils.AppConfig.API_RADIO_BUTTON;
 import static com.delta.bhansalitechno.utils.AppConfig.API_START_JOB;
 import static com.delta.bhansalitechno.utils.AppConfig.API_STOP_JOB;
 import static com.delta.bhansalitechno.utils.AppConfig.API_TEXT_LIST;
+import static com.delta.bhansalitechno.utils.AppConfig.API_VERSION;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_AFOSTROPHE;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_BTM_SHT;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_EMPER;
@@ -96,7 +135,7 @@ import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0026;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0027;
 import static com.delta.bhansalitechno.utils.AppConfig.NULL;
 
-public class StopJobListActivity extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener {
+public class StopJobListActivity extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener, ProgressRequestBody.UploadCallbacks {
 
     private PrefManager prefManager;
 
@@ -119,6 +158,8 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
     private TextView tvDrawingNoShow;
     private TextView tvProcessName;
 
+    private TextView webPdfview;
+
     private String mainUrl = "";
     private String file;
     private PDFPagerAdapter adapter;
@@ -130,7 +171,7 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
     int Seconds, Minutes, hour;
     int rotation;
 
-    PDFView pdfView;
+    //PDFView pdfView;
 
     ArrayList<JobNoModel> jobNoList = new ArrayList<>();
     ArrayList<JobNoModel> startJobNoList = new ArrayList<>();
@@ -150,8 +191,30 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
     private RecyclerView rvStopJObList;
     ArrayList<RadioModel> radioList = new ArrayList<>();
     ArrayList<TextListModel> holdReasonList = new ArrayList<>();
+    ArrayList<TextListModel> locationList = new ArrayList<>();
 
     String reasonId;
+    String locationId;
+
+    private long countdownMillis;
+    private CountDownTimer countdownTimer;
+
+    Handler shiftTimeHandler;
+
+    //TODO: Attachment Field
+    private static final float maxHeight = 1280.0f;
+    private static final float maxWidth = 1280.0f;
+    private Uri imageUriGlobal;
+    //Uri selectedImageUri1;
+    //private Bitmap thumbnail1;
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    protected static final int PICK_REQUEST_CAMERA_IMAGE = 1888;
+    private static final int PICK_REQUEST_GALLERY_IMAGE = 1;
+    private static final int PICK_REQUEST_FILE = 101;
+    public Uri filePath;
+    private String attachmentpath = "";
+    LinearLayout attachfile;
+    TextView attachementfilename;
 
     @SuppressLint("SetTextI18n")
     @Override
@@ -194,6 +257,8 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
             webView = findViewById(R.id.webView);
             imgExitScreen = findViewById(R.id.imgExitScreen);
 
+            webPdfview = findViewById(R.id.webPdfview);
+
             pdfViewPager = findViewById(R.id.pdfViewPager);
             lylSwipe = findViewById(R.id.lylSwipe);
             TextView tvDismiss = findViewById(R.id.tvDismiss);
@@ -223,17 +288,32 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
 
             ltLogout = findViewById(R.id.ltLogout);
             ltLogout.setOnClickListener(v -> {
-                showAppLogoutMessage();
+                for (int i = 0; i < startJobNoList.size(); i++) {
+                    if (startJobNoList.get(i).getStatus().equalsIgnoreCase("")) {
+                        openDialog();
+                        break;
+                    } else {
+                        showAppLogoutMessage();
+                    }
+                }
             });
 
-            pdfView = findViewById(R.id.idPDFView);
+
+            //pdfView = findViewById(R.id.idPDFView);
+
+            //pdfViewPager.setOnTouchListener(new MoveViewTouchListener(pdfViewPager));
 
             //apiJobNoList();
 
             //apiStartJob();
 
             apiHoldReasonAPI();
+            Log.d("", "apiHoldReasonAPI");
             apiCheckStartJob();
+            Log.d("", "apiCheckStartJob");
+//            apiLocationAPI();
+            Log.d("", "apiLocationAPI");
+            locationapi();
 
             /*final ZoomLinearLayout zoomLinearLayout = (ZoomLinearLayout) findViewById(R.id.zoom_linear_layout);
             zoomLinearLayout.setOnTouchListener(new View.OnTouchListener() {
@@ -243,6 +323,12 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                     return false;
                 }
             });*/
+
+            new Handler(Looper.getMainLooper()).post(() -> {
+                shiftTimeHandler = new Handler();
+                shiftTimeHandler.postDelayed(runnable1, 1000);
+            });
+
         } catch (Exception e) {
             e.printStackTrace();
             FirebaseCrashlytics.getInstance().recordException(e);
@@ -285,9 +371,11 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
 
                     if (rvStopJObList.getVisibility() == View.VISIBLE) {
                         rvStopJObList.setVisibility(View.GONE);
+                        //rvRadioBtn.setVisibility(View.GONE);
                         tvFilter.setText("Show");
                     } else {
                         rvStopJObList.setVisibility(View.VISIBLE);
+                        //rvRadioBtn.setVisibility(View.VISIBLE);
                         tvFilter.setText("Hide");
                     }
                     break;
@@ -422,7 +510,17 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                 pdfViewPager.setId(R.id.pdfViewPager);
                 adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
                 pdfViewPager.setAdapter(adapter);
+                /*pdfViewPager.setAdapter(new PDFPagerAdapter.Builder(this)
+                        .setPdfPath(getPdfPath())
+                        .setScale(2f)
+                        .setOnPageClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
 
+                            }
+                        })
+                        .create()
+                );*/
                 if (adapter != null && adapter.getCount() > 1) {
                     lylSwipe.setVisibility(View.VISIBLE);
                 } else {
@@ -430,10 +528,21 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                 }
                 lylPdfShow.removeAllViewsInLayout();
                 lylPdfShow.addView(pdfViewPager, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-                //lylPdfShow.setScaleX(1.25f);
-                //lylPdfShow.setScaleY(2f);
+                //lylPdfShow.setScaleX(2f);
+                //lylPdfShow.setScaleY(1f);
                 adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
                 pdfViewPager.setAdapter(adapter);
+                /*pdfViewPager.setAdapter(new PDFPagerAdapter.Builder(this)
+                        .setPdfPath(getPdfPath())
+                        .setScale(2f)
+                        .setOnPageClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+
+                            }
+                        })
+                        .create()
+                );*/
                 if (adapter != null && adapter.getCount() > 1) {
                     lylSwipe.setVisibility(View.VISIBLE);
                 } else {
@@ -466,6 +575,80 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
             e.printStackTrace();
             FirebaseCrashlytics.getInstance().recordException(e);
         }
+    }
+
+    private void openPDFView1() {
+        try {
+            String pathName = StopJobListActivity.this.getExternalFilesDir("BhansaliTechno").toString();
+            String fileName = "";
+            File directory = new File(pathName);
+            File[] files = directory.listFiles();
+            try {
+                if (files != null && files.length > 0) {
+                    for (File value : files) {
+                        Log.d("Files", "FileName:" + value.getName());
+                        if (value.getName().equals(file)) {
+                            fileName = value.getName();
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            if (!file.equals(fileName)) {
+                new StopJobListActivity.DownloadingTask().execute();
+            } else {
+                webView.setVisibility(View.GONE);
+                lylPdfShow.setVisibility(View.VISIBLE);
+                pdfViewPager.setVisibility(View.VISIBLE);
+                //imgRotation.setVisibility(View.VISIBLE);
+                tvRotation.setVisibility(View.VISIBLE);
+                pdfViewPager.setId(R.id.pdfViewPager);
+                lylPdfShow.removeAllViewsInLayout();
+                lylPdfShow.addView(pdfViewPager, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+                adapter = new PDFPagerAdapter(StopJobListActivity.this, getPdfPath());
+                pdfViewPager.setAdapter(adapter);
+
+                /*pdfViewPager.setAdapter(new PDFPagerAdapter.Builder(this)
+                        .setPdfPath(getPdfPath())
+                        .setScale(getPdfScale())
+                        .create()
+                );*/
+
+                if (adapter != null && adapter.getCount() > 1) {
+                    lylSwipe.setVisibility(View.VISIBLE);
+                } else {
+                    lylSwipe.setVisibility(View.GONE);
+                }
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    handler = new Handler();
+                    StartTime = SystemClock.uptimeMillis();
+                    handler.postDelayed(runnable, 0);
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    public int getScreenWidth(Context ctx) {
+        int w = 0;
+        if (ctx instanceof Activity) {
+            DisplayMetrics displaymetrics = new DisplayMetrics();
+            ((Activity) ctx).getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+            w = displaymetrics.widthPixels;
+        }
+        return w;
+    }
+
+    private PdfScale getPdfScale() {
+        PdfScale scale = new PdfScale();
+        scale.setScale(3.0f);
+        scale.setCenterX(getScreenWidth(this) / 2);
+        scale.setCenterY(0f);
+        return scale;
     }
 
     private String getPdfPath() {
@@ -522,6 +705,15 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
             e.printStackTrace();
         }
     }*/
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        /*new Handler(Looper.getMainLooper()).post(() -> {
+            shiftTimeHandler = new Handler();
+            shiftTimeHandler.postDelayed(runnable1, 0);
+        });*/
+    }
 
     @SuppressLint("StaticFieldLeak")
     private class DownloadingTask extends AsyncTask<String, Integer, String> {
@@ -699,7 +891,7 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                 Seconds = Seconds % 60;
 
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    String totalTime = String.format("%02d", hour) + " " + String.format("%02d", Minutes) + " " + String.format("%02d", Seconds);
+                    String totalTime = String.format("%02d", hour) + ":" + String.format("%02d", Minutes) + ":" + String.format("%02d", Seconds);
                     prefManager.setHandlerTime(totalTime);
                     tvStartTime.setText(prefManager.getHandlerTime());
                 });
@@ -837,6 +1029,12 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                 prefManager.setPlanQty("");
                 prefManager.setHandlerTime("");
                 prefManager.setStartTime("");
+
+                prefManager.setOneTimeShiftCheck("True");
+                prefManager.setJobListArray("");
+                prefManager.setShiftType("");
+                prefManager.setShiftIn("");
+                prefManager.setShiftOut("");
 
                 startActivity(new Intent(StopJobListActivity.this, LoginActivity.class));
                 finish();
@@ -1147,8 +1345,8 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                             lylStop.setVisibility(View.GONE);
                             //lylDisplayData.setVisibility(View.VISIBLE);
                             lylDisplayData.setVisibility(View.GONE);
-                            pdfView.setVisibility(View.GONE);
-                            ltLogout.setVisibility(View.GONE);
+                            //pdfView.setVisibility(View.GONE);
+                            ltLogout.setVisibility(View.VISIBLE);
 
                             String urlPdf = checkJobNoList.get(0).getPDFFile();
                             mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
@@ -1297,13 +1495,15 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                                 tvJobNo.setEnabled(false);
                                 tvItemCode.setEnabled(false);
                                 tvPlanQty.setEnabled(false);
-                                tvHome.setVisibility(View.VISIBLE);// Advance Visible
+                                //tvHome.setVisibility(View.VISIBLE);// Advance Visible
+                                //TODO : 17/10/2023
+                                tvHome.setVisibility(View.GONE);
                                 lylFilter.setVisibility(View.GONE);
                                 imgStartBtn.setVisibility(View.GONE);
                                 lylStop.setVisibility(View.GONE);
                                 lylDisplayData.setVisibility(View.GONE);
-                                pdfView.setVisibility(View.GONE);
-                                ltLogout.setVisibility(View.GONE);
+                                //pdfView.setVisibility(View.GONE);
+                                ltLogout.setVisibility(View.VISIBLE);
 
                                 String urlPdf = startJobNoList.get(0).getPdfFile();
                                 mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
@@ -1393,7 +1593,7 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    private void apiStopJob(String jobListId, String qty, String remarks, String status, String acceptedQty, String holdReason) {
+    private void apiStopJob(String jobListId, String qty, String remarks, String status, String acceptedQty, String holdReason, String locationId) {
         try {
             if (isInternet()) {
                 stopJobNoList.clear();
@@ -1413,8 +1613,19 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                 map.put("Status", NetworkUtils.createPartFromString(status));
                 map.put("AcceptedQty", NetworkUtils.createPartFromString(acceptedQty));
                 map.put("HoldReason", NetworkUtils.createPartFromString(holdReason));
+                map.put("LocId", NetworkUtils.createPartFromString(locationId));
 
-                new ApiUtil(this, API_STOP_JOB, map, null, new OnResponse() {
+                MultipartBody.Part file;
+
+                if (!attachmentpath.equalsIgnoreCase("")) {
+                    File oldFIle = new File(attachmentpath);
+                    ProgressRequestBody fileBody = new ProgressRequestBody(oldFIle, StopJobListActivity.this);
+                    file = MultipartBody.Part.createFormData("file", oldFIle.getName(), fileBody);
+                } else {
+                    file = null;
+                }
+
+                new ApiUtil(this, API_STOP_JOB, map, file, new OnResponse() {
                     @Override
                     public void onSuccess(JSONArray jsonArray) {
                         try {
@@ -1488,14 +1699,17 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                             lylPdfShow.setVisibility(View.GONE);
                             pdfViewPager.setVisibility(View.GONE);
                             webView.setVisibility(View.GONE);
-                            pdfView.setVisibility(View.GONE);
+                            //pdfView.setVisibility(View.GONE);
                             handler.removeCallbacksAndMessages(null);
                             lylFilter.setVisibility(View.GONE); //Advance Commit
-                            tvHome.setVisibility(View.VISIBLE);
+                            //tvHome.setVisibility(View.VISIBLE); //Advance Commit
+                            //TODO : 17/10/2023
+                            tvHome.setVisibility(View.GONE);
                             imgRotation.setVisibility(View.GONE);
                             tvRotation.setVisibility(View.VISIBLE);
                             ltLogout.setVisibility(View.VISIBLE);
                             rvRadioBtn.setVisibility(View.GONE);
+                            webPdfview.setVisibility(View.VISIBLE);
                             radioList.clear();
 
                             prefManager.setJobId("");
@@ -1509,7 +1723,6 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                             prefManager.setStartTime("");
 
                             Toast.makeText(StopJobListActivity.this, "Job Done Success.", Toast.LENGTH_SHORT).show();
-
                             //apiJobNoList();
 
                             //apiStartJobAPICardShow(); //Comment 08-09-2023
@@ -1517,6 +1730,7 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                             if (p.isShowing()) {
                                 p.dismiss();
                             }
+                            Log.d("", "MachineActivity6");
                             alertDialog.dismiss();
                             e.printStackTrace();
                             //showErrorMessage(e.getLocalizedMessage());
@@ -1526,10 +1740,14 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
 
                     @Override
                     public void on209(String message) {
-                        if (p.isShowing()) {
+                       /* if (p.isShowing()) {
                             p.dismiss();
-                        }
-                        Toast.makeText(StopJobListActivity.this, message, Toast.LENGTH_SHORT).show();
+                        }*/
+                        //Toast.makeText(StopJobListActivity.this, message, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(StopJobListActivity.this, "Job Auto Hold.", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(StopJobListActivity.this, MachineActivity.class);
+                        startActivity(intent);
+                        finish();
                         //showErrorMessage(message);
                     }
 
@@ -1588,7 +1806,30 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
             EditText edtAcceptProductionQty = confirmDialog.findViewById(R.id.edtAcceptProductionQty);
             edtAcceptProductionQty.setText("0");
             EditText edtRemarks = confirmDialog.findViewById(R.id.edtRemarks);
-
+            TextView dropdownValue = confirmDialog.findViewById(R.id.edtlocation);
+            dropdownValue.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ListPopupWindow listPopupWindow = createListPopupWindow(dropdownValue, locationList);
+                    listPopupWindow.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+                            locationId = locationList.get(pos).getId();
+                            dropdownValue.setText(locationList.get(pos).getName());
+                            listPopupWindow.dismiss();
+                        }
+                    });
+                    listPopupWindow.show();
+                }
+            });
+            attachfile = confirmDialog.findViewById(R.id.attachfile);
+            attachementfilename = confirmDialog.findViewById(R.id.attachementfilename);
+            attachfile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectImage();
+                }
+            });
             final AlertDialog.Builder alert = new AlertDialog.Builder(StopJobListActivity.this);
             alert.setView(confirmDialog);
             //alert.setTitle("Password");
@@ -1608,10 +1849,11 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                     Toast.makeText(StopJobListActivity.this, "Quantity and accepted qty can't be greater than available quantity.", Toast.LENGTH_SHORT).show();
                 } else {
                     apiStopJob(list.get(pos).getJobListId(), edtProductionQty.getText().toString().trim(),
-                            edtRemarks.getText().toString().trim(), "Stop", edtAcceptProductionQty.getText().toString().trim(), "");
+                            edtRemarks.getText().toString().trim(), "Stop", edtAcceptProductionQty.getText().toString().trim(), "", locationId);
                 }
             });
             btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1649,13 +1891,21 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                     listPopupWindow.show();
                 }
             });
+            attachfile = confirmDialog.findViewById(R.id.attachfile);
+            attachementfilename = confirmDialog.findViewById(R.id.attachementfilename);
+            attachfile.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    selectImage();
+                }
+            });
             btnYes.setOnClickListener(view -> {
                 if (dropdownValue.getText().toString().isEmpty()) {
                     Toast.makeText(StopJobListActivity.this, "Please select hold reason.", Toast.LENGTH_SHORT).show();
                 } else {
                     //apiStopJob(dropdownValue.getText().toString().trim(), "");
                     apiStopJob(list.get(pos).getJobListId(), "",
-                            "", "Hold", "", reasonId);
+                            "", "Hold", "", reasonId, "");
                 }
             });
             btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
@@ -1667,6 +1917,15 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
     private ListPopupWindow createListPopupWindow(View anchor, List<TextListModel> items) {
         final ListPopupWindow popup = new ListPopupWindow(StopJobListActivity.this);
         ListAdapter adapter = new ListPopupWindowAdapter(items);
+        popup.setAnchorView(anchor);
+        popup.setWidth(((View) anchor.getParent()).getWidth() / 2);
+        popup.setAdapter(adapter);
+        return popup;
+    }
+
+    private ListPopupWindow createListPopupWindowforlocation(View anchor, List<LocationModel> items) {
+        final ListPopupWindow popup = new ListPopupWindow(StopJobListActivity.this);
+        ListAdapter adapter = new ListPopupWindowAdapterforlocation(items);
         popup.setAnchorView(anchor);
         popup.setWidth(((View) anchor.getParent()).getWidth() / 2);
         popup.setAdapter(adapter);
@@ -1687,6 +1946,96 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                     checkUpdate();
                 }
             }
+
+            if (resultCode == RESULT_OK) {
+                Uri selectedImageUriCamera;
+                Uri selectedImageUriGallery;
+
+                if (requestCode == PICK_REQUEST_CAMERA_IMAGE) {
+                    /*selectedImageUri1 = imageUriglobal;
+                    String filePath = null;
+                    if (selectedImageUri1 != null) {
+                        try {
+                            String filemanagerstring = selectedImageUri1.getPath();
+
+                            String selectedImagePath = getPath(selectedImageUri1);
+
+                            if (selectedImagePath != null) {
+                                filePath = selectedImagePath;
+                            } else if (filemanagerstring != null) {
+                                filePath = filemanagerstring;
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Unknown path", Toast.LENGTH_LONG).show();
+                            }
+
+                            if (filePath != null) {
+                                compressImage(filePath);
+                            } else {
+                                thumbnail1 = null;
+                            }
+                            //attachementfilename.setText(file.getName());
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(), "Internal error", Toast.LENGTH_LONG).show();
+                        }
+                    }*/
+
+                    selectedImageUriCamera = imageUriGlobal;
+                    if (selectedImageUriCamera != null) {
+                        try {
+                            //Full Camera Image
+                            String selectedImagePath = getPath(imageUriGlobal);
+                            compressImage(selectedImagePath);
+                        } catch (Exception e) {
+                            Toast.makeText(this, "Internal Error", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else if (requestCode == PICK_REQUEST_GALLERY_IMAGE && null != data) {
+                    /*selectedImageUri1 = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+                    Cursor cursor = context.getContentResolver().query(selectedImageUri1,
+                            filePathColumn, null, null, null);
+                    if (cursor != null) {
+                        cursor.moveToFirst();
+                    } else {
+                        File myFile = new File(Objects.requireNonNull(selectedImageUri1.getPath()));
+                        Uri selectedImage = getImageContentUri(context, selectedImageUri1.getPath(), myFile);
+                        assert selectedImage != null;
+                        cursor = context.getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                        assert cursor != null;
+                        cursor.moveToFirst();
+                    }
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String picturePath = cursor.getString(columnIndex);
+                    cursor.close();
+                    thumbnail1 = BitmapFactory.decodeFile(picturePath);
+                    compressImage(picturePath);*/
+
+                    selectedImageUriGallery = data.getData();
+                    String selectedImagePath = getPath(selectedImageUriGallery);
+                    compressImage(selectedImagePath);
+                }
+
+                if (requestCode == PICK_REQUEST_FILE) {
+
+                    /*filePath = data.getData();
+                    attachmentpath = FilePaths.copyFileToInternalStorage(this, filePath, "UnnatiiAttendance");
+                    File imgFile = new File(attachmentpath);
+                    attachementfilename.setText(imgFile.getName());*/
+
+                    filePath = data.getData();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        attachmentpath = FilePaths.copyFileToInternalStorage(this, filePath, "UnnatiiAttendance");
+                    } else {
+                        attachmentpath = FilePaths.getPath(this, filePath);
+                    }
+
+                    File imgFile = new File(Objects.requireNonNull(attachmentpath));
+                    attachementfilename.setText(imgFile.getName());
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1737,6 +2086,7 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                                     radioList.add(model);
                                 }
                                 rvRadioBtn.setVisibility(View.VISIBLE);
+                                webPdfview.setVisibility(View.VISIBLE);
                                 RadioAdapter radioAdapter = new RadioAdapter(radioList, "", (id, name, no, code) -> {
                                     //String urlPdf = code;
                                     mainUrl = code.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
@@ -1751,6 +2101,15 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
                                 mainUrl = urlPdf.replace(KEY_U0027, KEY_AFOSTROPHE).replace(KEY_U0026, KEY_EMPER);
                                 file = mainUrl.substring(mainUrl.lastIndexOf('/') + 1);
                                 openPDFView();
+
+
+                                webPdfview.setOnClickListener(new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        openPdfInWebBrowser(mainUrl);
+                                    }
+                                });
+
                             }
                         } catch (JSONException e) {
                             if (p.isShowing()) {
@@ -1821,6 +2180,21 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    private void openPdfInWebBrowser(String pdfUrl) {
+        Uri uri = Uri.parse(pdfUrl);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, "application/pdf");
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(StopJobListActivity.this, "Unable to open PDF", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void apiHoldReasonAPI() {
         try {
             holdReasonList.clear();
@@ -1875,4 +2249,509 @@ public class StopJobListActivity extends AppCompatActivity implements View.OnCli
             FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
+
+    private void locationapi() {
+        try {
+            if (isInternet()) {
+                ProgressDialog p = new ProgressDialog(StopJobListActivity.this);
+                p.setCancelable(false);
+                p.setMessage("Loading...");
+                p.show();
+
+                new ApiUtil(StopJobListActivity.this,API_LOCATION, null, null, new OnResponse() {
+                    @Override
+                    public void onSuccess(JSONArray array) {
+                        try {
+                            if (p.isShowing()) {
+                                p.dismiss();
+                            }
+                            if (array.length() > 0) {
+                                for (int i = 0; i < array.length(); i++) {
+                                    JSONObject object = array.getJSONObject(i);
+                                    try {
+
+                                        String LocId = Utils.getReplacedString(object.has("LocId") ? object.getString("LocId") : NULL);
+                                        String Name = Utils.getReplacedString(object.has("Name") ? object.getString("Name") : NULL);
+                                        TextListModel textListModel = new TextListModel(LocId, Name);
+                                        locationList.add(textListModel);
+
+
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        FirebaseCrashlytics.getInstance().recordException(e);
+                                    }
+                                }
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            FirebaseCrashlytics.getInstance().recordException(e);
+                        }
+                    }
+
+                    @Override
+                    public void on209(String message) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        //showErrorMessage(message);
+                    }
+
+                    @Override
+                    public void onNullResponse() {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        //showErrorMessage("Null Response");
+                    }
+
+                    @Override
+                    public void onExceptionFired(String error) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        //showErrorMessage(error);
+                    }
+
+                    @Override
+                    public void on400(int responseCode) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        //showErrorMessage(String.valueOf(responseCode));
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Throwable t) {
+                        if (p.isShowing()) {
+                            p.dismiss();
+                        }
+                        //showErrorMessage(t.getLocalizedMessage());
+                    }
+                }).request();
+            } else {
+                showNoInternet();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    private void shiftOverAlert() {
+        try {
+            View confirmDialog = LayoutInflater.from(StopJobListActivity.this).inflate(R.layout.layout_shift_over_dlg, null);
+            AppCompatButton btnYes = confirmDialog.findViewById(R.id.btnYes);
+            AppCompatButton btnNo = confirmDialog.findViewById(R.id.btnNo);
+
+            final AlertDialog.Builder alert = new AlertDialog.Builder(this);
+            alert.setView(confirmDialog);
+            //alert.setTitle("Password");
+            //Creating an alert dialog
+            alertDialog = alert.create();
+            alertDialog.show();
+            alertDialog.setCancelable(false);
+            btnYes.setOnClickListener(view -> {
+                alertDialog.dismiss();
+                apiStopJob(prefManager.getMachineId(), "",
+                        "", "Hold", "", "7FBA4CF2-E0FB-46CB-A7A4-574BAEC8FD9B", "");
+            });
+            btnNo.setOnClickListener(v1 -> {
+                prefManager.setOneTimeShiftCheck("False");
+                alertDialog.dismiss();
+                shiftTimeHandler.removeCallbacks(runnable1);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Runnable runnable1 = new Runnable() {
+        @SuppressLint({"SetTextI18n", "DefaultLocale"})
+        public void run() {
+            if (!prefManager.getShiftOut().isEmpty()){
+                try {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        String shiftOutHour = Utils.ConvertDateFormat(prefManager.getShiftOut(), "hh:mm:ss", "hh");
+                        String shiftOutMin = Utils.ConvertDateFormat(prefManager.getShiftOut(), "hh:mm:ss", "mm");
+                        //String shiftOutSecond = Utils.ConvertDateFormat(prefManager.getShiftOut(),"hh:mm:ss","ss");
+
+                        int actualServerHour = Integer.parseInt(shiftOutHour);
+                        int actualServerMin = Integer.parseInt(shiftOutMin) - Integer.parseInt(prefManager.getMinusMin());
+
+                        //String systemCurrentTime = Utils.getCurrentTimestamp("hh:mm:ss");
+                        String systemCurrentHour = Utils.getCurrentTimestamp("hh");
+                        String systemCurrentMin = Utils.getCurrentTimestamp("mm");
+                        //String systemCurrentSecond = Utils.getCurrentTimestamp("ss");
+
+                        int actualSystemHour = Integer.parseInt(Objects.requireNonNull(systemCurrentHour));
+                        int actualSystemMin = Integer.parseInt(Objects.requireNonNull(systemCurrentMin));
+
+                        //int currentDayOfMonth = Calendar.getInstance().get(Calendar.HOUR);
+                        //int currentMonth = Calendar.getInstance().get(Calendar.MINUTE);
+
+                        boolean checkLogic = actualServerHour == actualSystemHour && actualServerMin == actualSystemMin;
+
+                        if (checkLogic) {
+                            //prefManager.setOneTimeShiftCheck("True");
+                            if (prefManager.getOneTimeShiftCheck().equalsIgnoreCase("True")) {
+                                shiftOverAlert();
+                            }
+                        }
+                    });
+                    shiftTimeHandler.postDelayed(this, 30000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }else {
+                //Toast.makeText(StopJobListActivity.this, "Shift Out Time Is Empty.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+    private void openDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(StopJobListActivity.this);
+        builder.setTitle("Alert !");
+        builder.setMessage("All Start Job First Hold Or Stop After Logout !");
+        builder.setCancelable(true);
+        builder.setPositiveButton("OK", (DialogInterface.OnClickListener) (dialog, which) -> {
+            dialog.cancel();
+        });
+        /*builder.setNegativeButton("No", (DialogInterface.OnClickListener) (dialog, which) -> {
+            dialog.cancel();
+        });*/
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void selectImage() {
+        final CharSequence[] items = {"Take Photo", "Cancel"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(
+                StopJobListActivity.this);
+        builder.setTitle("Add Photo");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if (items[item].equals("Take Photo")) {
+                    try {
+                        String fileName = System.currentTimeMillis() + ".jpg";
+                        // create parameters for Intent with filename
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+                        String currentDateAndTime = sdf.format(new Date());
+
+                        // Append the timestamp to the filename
+                        fileName = currentDateAndTime.replace(" ", "_") + "_" + fileName;
+
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.Images.Media.TITLE, fileName);
+                        values.put(MediaStore.Images.Media.DESCRIPTION, "Image capture by camera");
+                        imageUriGlobal = StopJobListActivity.this.getContentResolver().insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                values);
+                        // create new Intent
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriGlobal);
+                        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+                        startActivityForResult(intent, PICK_REQUEST_CAMERA_IMAGE);
+                    } catch (SecurityException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
+                        Toast.makeText(StopJobListActivity.this, "You have to give permission for take image. Please Give permission.", Toast.LENGTH_SHORT).show();
+                        //CommonUses.showToast(context, "You have to give permission for take image. Please Give permission.");
+                    }
+//                } else if (items[item].equals("Choose from Gallery")) {
+//                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                    intent.setType("image/*");
+//                    startActivityForResult(intent, PICK_REQUEST_GALLERY_IMAGE);
+//                } else if (items[item].equals("Attached Document")) {
+//                    Intent intent = new Intent();
+//                    intent.setType("*/*");
+//                    intent.setAction(Intent.ACTION_GET_CONTENT);
+//                    startActivityForResult(Intent.createChooser(intent, "ChooseFile"), PICK_REQUEST_FILE);
+                } else if (items[item].equals("Cancel")) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void askForResolution(final String picturePath) {
+        try {
+            attachmentpath = picturePath;
+            File imgFile = new File(attachmentpath);
+            attachementfilename.setText(imgFile.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = StopJobListActivity.this.managedQuery(uri, projection, null, null, null);
+        if (cursor != null) {
+            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
+            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } else
+            return null;
+    }
+
+    /*@Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try {
+            if (resultCode == RESULT_OK) {
+                Uri selectedImageUriCamera;
+                Uri selectedImageUriGallery;
+
+                if (requestCode == PICK_REQUEST_CAMERA_IMAGE) {
+                    *//*selectedImageUri1 = imageUriglobal;
+                    String filePath = null;
+                    if (selectedImageUri1 != null) {
+                        try {
+                            String filemanagerstring = selectedImageUri1.getPath();
+
+                            String selectedImagePath = getPath(selectedImageUri1);
+
+                            if (selectedImagePath != null) {
+                                filePath = selectedImagePath;
+                            } else if (filemanagerstring != null) {
+                                filePath = filemanagerstring;
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Unknown path", Toast.LENGTH_LONG).show();
+                            }
+
+                            if (filePath != null) {
+                                compressImage(filePath);
+                            } else {
+                                thumbnail1 = null;
+                            }
+                            //attachementfilename.setText(file.getName());
+                        } catch (Exception e) {
+                            Toast.makeText(getApplicationContext(), "Internal error", Toast.LENGTH_LONG).show();
+                        }
+                    }*//*
+
+                    selectedImageUriCamera = imageUriGlobal;
+                    if (selectedImageUriCamera != null) {
+                        try {
+                            //Full Camera Image
+                            String selectedImagePath = getPath(imageUriGlobal);
+                            compressImage(selectedImagePath);
+                        } catch (Exception e) {
+                            Toast.makeText(this, "Internal Error", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else if (requestCode == PICK_REQUEST_GALLERY_IMAGE && null != data) {
+                    *//*selectedImageUri1 = data.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+                    Cursor cursor = context.getContentResolver().query(selectedImageUri1,
+                            filePathColumn, null, null, null);
+                    if (cursor != null) {
+                        cursor.moveToFirst();
+                    } else {
+                        File myFile = new File(Objects.requireNonNull(selectedImageUri1.getPath()));
+                        Uri selectedImage = getImageContentUri(context, selectedImageUri1.getPath(), myFile);
+                        assert selectedImage != null;
+                        cursor = context.getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                        assert cursor != null;
+                        cursor.moveToFirst();
+                    }
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String picturePath = cursor.getString(columnIndex);
+                    cursor.close();
+                    thumbnail1 = BitmapFactory.decodeFile(picturePath);
+                    compressImage(picturePath);*//*
+
+                    selectedImageUriGallery = data.getData();
+                    String selectedImagePath = getPath(selectedImageUriGallery);
+                    compressImage(selectedImagePath);
+                }
+
+                if (requestCode == PICK_REQUEST_FILE) {
+
+                    *//*filePath = data.getData();
+                    attachmentpath = FilePaths.copyFileToInternalStorage(this, filePath, "UnnatiiAttendance");
+                    File imgFile = new File(attachmentpath);
+                    attachementfilename.setText(imgFile.getName());*//*
+
+                    filePath = data.getData();
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        attachmentpath = FilePaths.copyFileToInternalStorage(this, filePath, "UnnatiiAttendance");
+                    } else {
+                        attachmentpath = FilePaths.getPath(this, filePath);
+                    }
+
+                    File imgFile = new File(Objects.requireNonNull(attachmentpath));
+                    attachementfilename.setText(imgFile.getName());
+                }
+            }
+        } catch (Exception e) {
+            FirebaseCrashlytics.getInstance().recordException(e);
+            Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }*/
+
+    public String compressImage(String imagePath) {
+        String filepath = "";
+        try {
+
+            Bitmap scaledBitmap = null;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            Bitmap bmp = BitmapFactory.decodeFile(imagePath, options);
+
+            int actualHeight = options.outHeight;
+            int actualWidth = options.outWidth;
+
+            float imgRatio = (float) actualWidth / (float) actualHeight;
+            float maxRatio = maxWidth / maxHeight;
+
+            if (actualHeight > maxHeight || actualWidth > maxWidth) {
+                if (imgRatio < maxRatio) {
+                    imgRatio = maxHeight / actualHeight;
+                    actualWidth = (int) (imgRatio * actualWidth);
+                    actualHeight = (int) maxHeight;
+                } else if (imgRatio > maxRatio) {
+                    imgRatio = maxWidth / actualWidth;
+                    actualHeight = (int) (imgRatio * actualHeight);
+                    actualWidth = (int) maxWidth;
+                } else {
+                    actualHeight = (int) maxHeight;
+                    actualWidth = (int) maxWidth;
+                }
+            }
+
+            options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
+            options.inJustDecodeBounds = false;
+            options.inDither = false;
+            options.inPurgeable = true;
+            options.inInputShareable = true;
+            options.inTempStorage = new byte[16 * 1024];
+
+            try {
+                bmp = BitmapFactory.decodeFile(imagePath, options);
+            } catch (OutOfMemoryError exception) {
+                exception.printStackTrace();
+            }
+
+            try {
+                scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.RGB_565);
+            } catch (OutOfMemoryError exception) {
+                exception.printStackTrace();
+            }
+
+            float ratioX = actualWidth / (float) options.outWidth;
+            float ratioY = actualHeight / (float) options.outHeight;
+            float middleX = actualWidth / 2.0f;
+            float middleY = actualHeight / 2.0f;
+
+            Matrix scaleMatrix = new Matrix();
+            scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+            assert scaledBitmap != null;
+            Canvas canvas = new Canvas(scaledBitmap);
+            canvas.setMatrix(scaleMatrix);
+            canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+            if (bmp != null) {
+                bmp.recycle();
+            }
+
+            ExifInterface exif;
+            try {
+                exif = new ExifInterface(imagePath);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+                Matrix matrix = new Matrix();
+                if (orientation == 6) {
+                    matrix.postRotate(90);
+                } else if (orientation == 3) {
+                    matrix.postRotate(180);
+                } else if (orientation == 8) {
+                    matrix.postRotate(270);
+                }
+                scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+            } catch (IOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+            FileOutputStream out;
+
+            /*File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                    + "/Android/data/"
+                    + context.getApplicationContext().getPackageName()
+                    + "/Files/Compressed");*/
+
+            File mediaStorageDir = new File(StopJobListActivity.this.getExternalFilesDir(null)
+                    + "/UnnatiiAttendance");
+
+            // Create the storage directory if it does not exist
+            if (!mediaStorageDir.exists()) {
+                mediaStorageDir.mkdirs();
+            }
+
+            String mImageName = "IMG_" + System.currentTimeMillis() + ".jpg";
+
+            Log.d("tag1", "image name is 0 " + System.currentTimeMillis());
+
+            filepath = (mediaStorageDir.getAbsolutePath() + "/" + mImageName);
+
+            try {
+
+                out = new FileOutputStream(filepath);
+                //write the compressed bitmap at the destination specified by filename.
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+
+            } catch (FileNotFoundException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+
+            askForResolution(filepath);
+        } catch (Exception e) {
+            Log.d("tag", "Exeption is " + e.getMessage());
+        }
+        return filepath;
+    }
+
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            inSampleSize = Math.min(heightRatio, widthRatio);
+        }
+        final float totalPixels = width * height;
+        final float totalReqPixelsCap = reqWidth * reqHeight * 2;
+
+        while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
+            inSampleSize++;
+        }
+
+        return inSampleSize;
+    }
+
+    @Override
+    public void onProgressUpdate(int percentage) {
+
+    }
+
+    @Override
+    public void onError() {
+
+    }
+
+    @Override
+    public void onFinish() {
+
+    }
+
 }

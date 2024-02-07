@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -17,9 +18,11 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.delta.bhansalitechno.R;
 import com.delta.bhansalitechno.adapter.MachineAdapter;
 import com.delta.bhansalitechno.api.ApiUtil;
+import com.delta.bhansalitechno.bottomsheets.LogoutFragment;
 import com.delta.bhansalitechno.bottomsheets.MessageFragment;
 import com.delta.bhansalitechno.bottomsheets.NoInternetFragment;
 import com.delta.bhansalitechno.databinding.ActivityMachineBinding;
@@ -65,6 +68,12 @@ public class MachineActivity extends AppCompatActivity {
             binding = DataBindingUtil.setContentView(this, R.layout.activity_machine);
             prefManager = new PrefManager(MachineActivity.this);
 
+            if (getIntent().getBooleanExtra("FROM_NOTIFICATION", false)) {
+                // Show the Toast message
+                Toast.makeText(this, "Job imported. Please wait a few minutes.", Toast.LENGTH_SHORT).show();
+            }
+
+
             if (!prefManager.getMachineName().isEmpty()) {
                 binding.tvSelectedMachine.setVisibility(View.GONE);
                 binding.tvSelectedMachine.setText("Previous Selected Machine : " + prefManager.getMachineName() + " " + "(" + prefManager.getMachineNo() + ")");
@@ -85,6 +94,12 @@ public class MachineActivity extends AppCompatActivity {
                 } else {
                     showErrorMessage("Please select machine");
                 }
+            });
+
+
+            LottieAnimationView ltLogout = findViewById(R.id.ltLogout);
+            ltLogout.setOnClickListener(v -> {
+                showAppLogoutMessage();
             });
 
             apiMachineList();
@@ -219,5 +234,39 @@ public class MachineActivity extends AppCompatActivity {
 
         });
         new Handler(Looper.myLooper()).post(() -> n.show(MachineActivity.this.getSupportFragmentManager(), KEY_BTM_SHT));
+    }
+
+    private void showAppLogoutMessage() {
+        try {
+            LogoutFragment logoutFragment = new LogoutFragment(() -> {
+                prefManager.setLoggedIn("False");
+                prefManager.setMachineCode("");
+                prefManager.setMachineNo("");
+                prefManager.setMachineId("");
+                prefManager.setMachineName("");
+                prefManager.setMachine("");
+                prefManager.setProcess("");
+                prefManager.setShop("");
+                prefManager.setJobNo("");
+                prefManager.setJobId("");
+                prefManager.setItmName("");
+                prefManager.setPlanQty("");
+                prefManager.setHandlerTime("");
+                prefManager.setStartTime("");
+
+                prefManager.setOneTimeShiftCheck("True");
+                prefManager.setJobListArray("");
+                prefManager.setShiftType("");
+                prefManager.setShiftIn("");
+                prefManager.setShiftOut("");
+
+                startActivity(new Intent(MachineActivity.this, LoginActivity.class));
+                finish();
+            });
+            logoutFragment.show(getSupportFragmentManager(), "bottom_sheet");
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
     }
 }

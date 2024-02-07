@@ -185,12 +185,12 @@
             android:fontFamily="@font/gilroy_semibold"
             android:gravity="center"
             android:text="Login"
+            android:focusable="true"
             android:textColor="@color/white"
             android:textSize="@dimen/_20sdp"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@id/imgDeltaLogo"
-            app:layout_constraintTop_toBottomOf="@id/tlEmpId"
-            tools:ignore="HardcodedText" />
+            app:layout_constraintTop_toBottomOf="@id/tlEmpId"/>
 
     </LinearLayout>
 

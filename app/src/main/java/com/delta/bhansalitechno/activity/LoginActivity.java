@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -70,14 +71,24 @@ public class LoginActivity extends AppCompatActivity {
     private String fcmId = "";
     private int screenOrientation = 1;
     private TextInputEditText txtUsername, txtPassword;
+    private TextView btnLogin;
     static final int PERMISSION_REQUEST_CODE_PHONE_STATE = 10;
 
     AlertDialog aDialog;
 
     String[] appPermissions = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            android.Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.CAMERA,
     };
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    public static String[] storge_permissions_33 = {
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.CAMERA,
+            Manifest.permission.READ_MEDIA_IMAGES,
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,19 +100,25 @@ public class LoginActivity extends AppCompatActivity {
 
             prefManager = new PrefManager(LoginActivity.this);
 
-            requestFirebaseTokenId();
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkAndRequestPermission()) {
-                    init();
-                }
-            }
+
+
+                /*if (Build.VERSION.SDK_INT >= 33) {*/
+                    if (checkAndRequestPermission()) {
+                        init();
+                    }
+                /*}*/
+
+            requestFirebaseTokenId();
         } catch (Exception e) {
             e.printStackTrace();
             FirebaseCrashlytics.getInstance().recordException(e);
         }
     }
 
+
+
+    @RequiresApi(api = 33)
     @SuppressLint("HardwareIds")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
@@ -144,7 +161,9 @@ public class LoginActivity extends AppCompatActivity {
                                 KEY_GRANT_PERMISSION,
                                 v -> {
                                     aDialog.dismiss();
-                                    checkAndRequestPermission();
+                                    /*if (Build.VERSION.SDK_INT >= 33) {*/
+                                        checkAndRequestPermission();
+                                    /*}*/
                                 },
                                 KEY_BACK,
                                 v -> {
@@ -203,7 +222,7 @@ public class LoginActivity extends AppCompatActivity {
             //Animation mAnimationSlide1 = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_out);
             //imgAppLogo.startAnimation(mAnimationSlide1);
 
-            TextView btnLogin = findViewById(R.id.btnLogin);
+            btnLogin = findViewById(R.id.btnLogin);
             //Animation mAnimationSlide = AnimationUtils.loadAnimation(LoginActivity.this, R.anim.anim_in);
             //btnLogin.startAnimation(mAnimationSlide);
 
@@ -211,21 +230,24 @@ public class LoginActivity extends AppCompatActivity {
             txtPassword = findViewById(R.id.txtPassword);
 
             btnLogin.setOnClickListener(v -> {
+                Log.d("", "Login Button Click.");
                 isValid();
                 //startActivity(new Intent(LoginActivity.this, DashboardActivityNew.class));
                 //finish();
             });
+
         } catch (Resources.NotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean checkAndRequestPermission() {
+
+    /*private boolean checkAndRequestPermission() {
 
         List<String> listPermissionNeeded = new ArrayList<>();
 
         //Check All Permission Are Granted On Not
-        for (String perm : appPermissions) {
+        for (String perm : storge_permissions_33) {
             if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
                 listPermissionNeeded.add(perm);
             }
@@ -238,6 +260,48 @@ public class LoginActivity extends AppCompatActivity {
                     PERMISSION_REQUEST_CODE_PHONE_STATE);
             return false;
         }
+        return true;
+    }*/
+
+    private boolean checkAndRequestPermission() {
+
+        List<String> listPermissionNeeded = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+            //Check All Permission Are Granted On Not
+            for (String perm : storge_permissions_33) {
+                if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                    listPermissionNeeded.add(perm);
+                }
+            }
+
+            //Ask For Non Granted Permission
+            if (!listPermissionNeeded.isEmpty()) {
+                ActivityCompat.requestPermissions(this,
+                        listPermissionNeeded.toArray(new String[0]),
+                        PERMISSION_REQUEST_CODE_PHONE_STATE);
+                return false;
+            }
+        } else {
+
+            //Check All Permission Are Granted On Not
+
+                for (String perm : appPermissions) {
+                    if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                        listPermissionNeeded.add(perm);
+                    }
+                }
+
+
+            //Ask For Non Granted Permission
+            if (!listPermissionNeeded.isEmpty()) {
+                ActivityCompat.requestPermissions(this,
+                        listPermissionNeeded.toArray(new String[0]),
+                        PERMISSION_REQUEST_CODE_PHONE_STATE);
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -315,6 +379,11 @@ public class LoginActivity extends AppCompatActivity {
                                 String FCMId = object.has("FCMId") ? object.getString("FCMId") : NULL;
                                 String ProfilePhotoPathShow = object.has("ProfilePhotoPathShow") ? object.getString("ProfilePhotoPathShow") : NULL;
 
+                                String ShiftType = object.has("ShiftType") ? object.getString("ShiftType") : NULL;
+                                String ShiftIn = object.has("ShiftIn") ? object.getString("ShiftIn") : NULL;
+                                String ShiftOut = object.has("ShiftOut") ? object.getString("ShiftOut") : NULL;
+                                String MinusMin = object.has("MinusMin") ? object.getString("MinusMin") : NULL;
+
                                 prefManager.setUserId(UserId);
                                 prefManager.setFirstName(FirstName);
                                 prefManager.setLastName(LastName);
@@ -322,6 +391,10 @@ public class LoginActivity extends AppCompatActivity {
                                 prefManager.setPassword(Password);
                                 prefManager.setFcmId(FCMId);
                                 prefManager.setIsAdmin(IsAdmin);
+                                prefManager.setShiftType(ShiftType);
+                                prefManager.setShiftIn(ShiftIn);
+                                prefManager.setShiftOut(ShiftOut);
+                                prefManager.setMinusMin(MinusMin);
                                 prefManager.setLoggedIn("True");
 
                                 startActivity(new Intent(LoginActivity.this, MachineActivity.class));

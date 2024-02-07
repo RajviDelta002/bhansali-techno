@@ -3,16 +3,22 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.delta.bhansalitechno">
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission
         android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.CALL_PHONE"
+        tools:ignore="PermissionImpliesUnsupportedChromeOsHardware" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.CAMERA"
+        tools:ignore="PermissionImpliesUnsupportedChromeOsHardware" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="false"
@@ -41,6 +47,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".GpsCameraActivity.CameraActivity"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".GpsCameraActivity.CameraXActivity"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name="com.delta.bhansalitechno.activity.StopJobListActivityNew"
+            android:exported="true"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="fullSensor"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name="com.delta.bhansalitechno.activity.StopJobListActivity"
@@ -94,11 +121,21 @@
 
         <service
             android:name="com.delta.bhansalitechno.firebase.MyFirebaseMessagingService"
-            tools:ignore="ExportedService">
+            tools:ignore="ExportedService"
+            android:exported="true">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <receiver
+            android:name=".util.MySMSBroadcastReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver">
+            <intent-filter>
+                <action android:name="com.google.android.gms.auth.api.phone.SMS_RETRIEVED" />
+            </intent-filter>
+        </receiver>
 
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"

@@ -2,8 +2,8 @@
     <string name="app_name">Delta iShop</string>
     <string name="user_name">Username <font color='red'>*</font></string>
     <string name="password">Password <font color='red'>*</font></string>
-    <string name="production_qty">Production Qty <font color='red'>*</font></string>
-    <string name="acept_production_qty">Accept Qty <font color='red'>*</font></string>
+    <string name="production_qty">Accepted Qty <font color='red'>*</font></string>
+    <string name="acept_production_qty">Rejected Qty <font color='red'>*</font></string>
     <string name="shop">Shop <font color='red'>*</font></string>
     <string name="machine_id">Machine ID <font color='red'>*</font></string>
     <string name="emp_id">Emp ID <font color='red'>*</font></string>

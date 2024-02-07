@@ -19,13 +19,20 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 
 import com.delta.bhansalitechno.R;
+
 import com.delta.bhansalitechno.activity.DashboardActivityNew;
+import com.delta.bhansalitechno.activity.MachineActivity;
+import com.delta.bhansalitechno.activity.StartJobListActivity;
 import com.delta.bhansalitechno.utils.PrefManager;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -45,9 +52,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMessagingServ";
 
     NotificationManager notifManager;
-    //private PrefManager prefManager;
+    private PrefManager prefManager;
 
-    //int NotiCount = 0;
+    int NotiCount = 0;
 
     String name = "my_package_channel_iShop";
     String id = "my_package_channel_id_iShop";
@@ -59,35 +66,54 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         Log.d(TAG, "onMessageReceived From : " + remoteMessage.getFrom());
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
-            showNotification(remoteMessage.getData());
+            generateNotification(getApplicationContext(),remoteMessage.getNotification().getBody());
+            //showNotification(remoteMessage.getData());
+            if(remoteMessage.getData().toString().contains("type=NewJob"))
+            {
+                Log.d(TAG, "new job rcvd: ");
+
+                Intent intent = null;
+                intent = new Intent(getApplicationContext(), StartJobListActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getApplicationContext().startActivity(intent);
+                //finish();
+
+            }
         }
     }
+
+
 
     //Showing Notification
     @SuppressLint("LongLogTag")
     private void showNotification(Map<String, String> data) {
         try {
-            //prefManager = new PrefManager(getApplicationContext());
+            prefManager = new PrefManager(getApplicationContext());
             Log.d(TAG, "showNotification: " + data);
             if (data != null) {
                 try {
                     Intent intent = null;
-                    if (Objects.requireNonNull(data.get("Types")).equalsIgnoreCase("Test")) {
-                        intent = new Intent(getApplicationContext(), DashboardActivityNew.class);
+                  /*if (Objects.requireNonNull(data.get("type")).equalsIgnoreCase("Test")) {
+                        intent = new Intent(getApplicationContext(), MachineActivity.class);
                     } else {
-                        intent = new Intent(getApplicationContext(), DashboardActivityNew.class);
-                    }
+                        intent = new Intent(getApplicationContext(), MachineActivity.class);
+                    }*/
+                    intent = new Intent(getApplicationContext(), MachineActivity.class);
+                    //Toast.makeText(this, "Job imported Wait Few Minutes", Toast.LENGTH_SHORT).show();
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    intent.putExtra("FROM_NOTIFICATION", true);
                     PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), generateRandom(), intent, 0);
 
                     Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
+                    Log.d("", "data.getmessage1" + data.get("message"));
                     //For Oreo
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         try {
                             if (notifManager == null) {
                                 notifManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
                             }
+                            Log.d("", "data.getmessage2" + data.get("message"));
                             if (notifManager != null) {
                                 int importance = NotificationManager.IMPORTANCE_HIGH;
                                 NotificationChannel notificationChannel = notifManager.getNotificationChannel(id);
@@ -98,34 +124,42 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
                                     notifManager.createNotificationChannel(notificationChannel);
                                 }
-
+                                Log.d("", "data.getmessage3" + data.get("message"));
                                 String contentText = "";
                                 String photo = "";
 
                                 if (data.containsKey("message")) {
                                     contentText = data.get("message");
                                 }
-
+                                Log.d("", "data.getmessage4" + data.get("message"));
                                 if (data.containsKey("photo")) {
                                     photo = data.get("photo");
                                     Log.d("tag", photo);
                                 }
-
+                                Log.d("", "data.getmessage5" + data.get("message"));
                                 Bitmap bitmap = null;
 
+                                assert photo != null;
                                 if (!photo.equalsIgnoreCase("")) {
                                     bitmap = getBitmapFromURL(photo);
                                     bitmap = getCircularBitmap(bitmap);
                                 } else {
                                     //bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bhansali_techno_logo_1);
-                                    bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
+                                    bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.ic_bhansali_techno_logo_1);
                                     bitmap = getCircularBitmap(bitmap);
                                 }
-
-                                NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
-                                bigTextStyle.bigText(contentText);
-
+                                Log.d("", "data.getmessage6" + data.get("message"));
+                               /* NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
+                                bigTextStyle.bigText(contentText);*/
                                 NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
+                                        //.setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
+                                        .setContentTitle(data.get("Title").replace("%20", " "))
+                                        .setContentText("test")
+                                        .setDefaults(Notification.DEFAULT_ALL)
+                                        .setAutoCancel(true)
+                                        .setChannelId(id)
+                                        .setContentIntent(pendingIntent);
+                               /* NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
                                         //.setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
                                         .setSmallIcon(R.mipmap.ic_launcher)
                                         .setLargeIcon(bitmap)
@@ -136,7 +170,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                         .setAutoCancel(true)
                                         .setSound(defaultSoundUri)
                                         .setChannelId(id)
-                                        .setContentIntent(pendingIntent);
+                                        .setContentIntent(pendingIntent);*/
+                                Log.d("", "data.getmessage7" + data.get("message"));
 
                                 /*NotificationCompat.WearableExtender extender =
                                         new NotificationCompat.WearableExtender();
@@ -146,6 +181,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                 builder.extend(extender);*/
 
                                 notifManager.notify(generateRandom(), builder.build());
+                                Log.d("", "data.getmessage8" + data.get("message"));
                             }
                         } catch (Exception e) {
                             Log.d(TAG, "Exception is " + e.getMessage());
@@ -167,7 +203,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                 String contentText = data.get("message");
 
                                 String photo = "";
-
+                                Log.d("", "data.getmessage9" + data.get("message"));
                                 if (data.containsKey("photo")) {
                                     photo = data.get("photo");
                                 }
@@ -182,7 +218,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                     bitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
                                     bitmap = getCircularBitmap(bitmap);
                                 }
-
+                                Log.d("", "data.getmessage10" + data.get("message"));
                                 NotificationCompat.BigTextStyle bigTextStyle = new NotificationCompat.BigTextStyle();
                                 bigTextStyle.bigText(contentText);
 
@@ -190,6 +226,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                         //.setSmallIcon(R.drawable.ic_bhansali_techno_logo_1)
                                         .setSmallIcon(R.mipmap.ic_launcher)
                                         .setLargeIcon(bitmap)
+                                        .setColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary))
                                         .setContentTitle(data.get("Title").replace("%20", " "))
                                         .setStyle(bigTextStyle)
                                         .setSound(defaultSoundUri)
@@ -198,7 +235,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                                         .setChannelId(id)
                                         .setDefaults(Notification.DEFAULT_ALL)
                                         .setContentIntent(pendingIntent);
-
+                                Log.d("", "data.getmessage11" + data.get("message"));
                                 notifManager.notify(generateRandom(), notificationBuilderForfees.build());
                             }
 
@@ -206,14 +243,14 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                             Log.d(TAG, "Exception is " + e.getMessage());
                             FirebaseCrashlytics.getInstance().recordException(e);
                         }
-
+                        Log.d("", "data.getmessage12" + data.get("message"));
                     }
 
-                    /*if (!prefManager.getNotiFicationCount().equals("")) {
+                    if (!prefManager.getNotiFicationCount().equals("")) {
                         NotiCount = Integer.parseInt(prefManager.getNotiFicationCount());
                     }
                     NotiCount++;
-                    prefManager.setNotiFicationCount(NotiCount);*/
+                    prefManager.setNotiFicationCount(NotiCount);
                 } catch (Exception e) {
                     Log.d(TAG, "showNotification: " + e.getLocalizedMessage());
                     FirebaseCrashlytics.getInstance().recordException(e);
@@ -304,5 +341,44 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         // Return the circular bitmap
         return dstBitmap;
+    }
+
+    private void generateNotification(Context context, String msg) {
+
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        String channelId = "channel-fbase";
+        String channelName = "demoFbase";
+        int importance = NotificationManager.IMPORTANCE_HIGH;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel mChannel = new NotificationChannel(
+                    channelId, channelName, importance);
+            notificationManager.createNotificationChannel(mChannel);
+        }
+
+        Intent notificationIntent = new Intent(getApplicationContext(), MachineActivity.class);
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_ONE_SHOT);
+
+        NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(context, channelId);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+            int color = 0x008000;
+            mBuilder.setColor(color);
+        } else {
+            mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+        }
+        mBuilder.setStyle(new NotificationCompat.BigTextStyle().bigText(msg));
+
+        mBuilder.setContentTitle(msg);
+        mBuilder.setContentText(msg);
+        mBuilder.setContentIntent(pendingIntent);
+
+
+        //If you don't want all notifications to overwrite add int m to unique value
+        Random random = new Random();
+        int m = random.nextInt(9999 - 1000) + 1000;
+        notificationManager.notify(m, mBuilder.build());
     }
 }

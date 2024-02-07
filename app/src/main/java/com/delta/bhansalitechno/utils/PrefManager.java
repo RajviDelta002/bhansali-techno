@@ -665,14 +665,14 @@ public class PrefManager {
         return sharedPreferences.getString("MinutesTime", KEY_EMPTY_STRING);
     }
 
-    public void setSecondTime(String secondTime) {
+    public void setOneTimeShiftCheck(String oneTimeShiftCheck) {
         editor = sharedPreferences.edit();
-        editor.putString("SecondTime", secondTime);
+        editor.putString("OneTimeShiftCheck", oneTimeShiftCheck);
         editor.apply();
     }
 
-    public String getSecondTime() {
-        return sharedPreferences.getString("SecondTime", KEY_EMPTY_STRING);
+    public String getOneTimeShiftCheck() {
+        return sharedPreferences.getString("OneTimeShiftCheck", "True");
     }
 
     public void setJobListArray(String jobListArray) {
@@ -683,5 +683,45 @@ public class PrefManager {
 
     public String getJobListArray() {
         return sharedPreferences.getString("JobListArray", KEY_EMPTY_STRING);
+    }
+
+    public void setShiftType(String shiftType) {
+        editor = sharedPreferences.edit();
+        editor.putString("ShiftType", shiftType);
+        editor.apply();
+    }
+
+    public String getShiftType() {
+        return sharedPreferences.getString("ShiftType", KEY_EMPTY_STRING);
+    }
+
+    public void setShiftIn(String shiftIn) {
+        editor = sharedPreferences.edit();
+        editor.putString("ShiftIn", shiftIn);
+        editor.apply();
+    }
+
+    public String getShiftIn() {
+        return sharedPreferences.getString("ShiftIn", KEY_EMPTY_STRING);
+    }
+
+    public void setShiftOut(String shiftOut) {
+        editor = sharedPreferences.edit();
+        editor.putString("ShiftOut", shiftOut);
+        editor.apply();
+    }
+
+    public String getShiftOut() {
+        return sharedPreferences.getString("ShiftOut", KEY_EMPTY_STRING);
+    }
+
+    public void setMinusMin(String minusMin) {
+        editor = sharedPreferences.edit();
+        editor.putString("MinusMin", minusMin);
+        editor.apply();
+    }
+
+    public String getMinusMin() {
+        return sharedPreferences.getString("MinusMin", KEY_EMPTY_STRING);
     }
 }

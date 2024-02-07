@@ -4,16 +4,26 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -47,11 +57,12 @@ import com.delta.bhansalitechno.interfaces.RecyclerViewClickListener;
 import com.delta.bhansalitechno.model.JobNoModel;
 import com.delta.bhansalitechno.model.RadioModel;
 import com.delta.bhansalitechno.model.StopJobNoModel;
+import com.delta.bhansalitechno.util.ProgressRequestBody;
 import com.delta.bhansalitechno.utils.ConnectionDetector;
 import com.delta.bhansalitechno.utils.NetworkUtils;
 import com.delta.bhansalitechno.utils.PrefManager;
 import com.delta.bhansalitechno.utils.Utils;
-import com.github.barteksc.pdfviewer.PDFView;
+//import PDFView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.play.core.appupdate.AppUpdateInfo;
 import com.google.android.play.core.appupdate.AppUpdateManager;
@@ -65,6 +76,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,7 +107,7 @@ import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0026;
 import static com.delta.bhansalitechno.utils.AppConfig.KEY_U0027;
 import static com.delta.bhansalitechno.utils.AppConfig.NULL;
 
-public class DashboardActivityNew extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener /*, RecyclerViewClickListener*/ {
+public class DashboardActivityNew extends AppCompatActivity implements View.OnClickListener, RecyclerViewClickListener, ProgressRequestBody.UploadCallbacks/*, RecyclerViewClickListener*/ {
 
     private PrefManager prefManager;
 
@@ -129,7 +141,22 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
     int Seconds, Minutes, hour;
     int rotation;
 
-    PDFView pdfView;
+    //TODO: Attachment Field
+    private static final float maxHeight = 1280.0f;
+    private static final float maxWidth = 1280.0f;
+    private Uri imageUriGlobal;
+    //Uri selectedImageUri1;
+    //private Bitmap thumbnail1;
+    private static final int PERMISSION_REQUEST_CODE = 200;
+    protected static final int PICK_REQUEST_CAMERA_IMAGE = 1888;
+    private static final int PICK_REQUEST_GALLERY_IMAGE = 1;
+    private static final int PICK_REQUEST_FILE = 101;
+    public Uri filePath;
+    private String attachmentpath = "";
+    LinearLayout attachfile;
+    TextView attachementfilename;
+
+    //PDFView pdfView;
 
     ArrayList<JobNoModel> jobNoList = new ArrayList<>();
     ArrayList<JobNoModel> startJobNoList = new ArrayList<>();
@@ -220,7 +247,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 showAppLogoutMessage();
             });
 
-            pdfView = findViewById(R.id.idPDFView);
+            //pdfView = findViewById(R.id.idPDFView);
 
             apiJobNoList();
             //apiVersion();
@@ -472,7 +499,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 imgStartBtn.setVisibility(View.GONE);
                 lylStop.setVisibility(View.GONE);
                 lylDisplayData.setVisibility(View.VISIBLE);
-                pdfView.setVisibility(View.GONE);
+                //pdfView.setVisibility(View.GONE);
                 ltLogout.setVisibility(View.GONE);
 
                 String urlPdf = radioList.get(position).getPDFFile();
@@ -1098,7 +1125,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             imgStartBtn.setVisibility(View.GONE);
                             lylStop.setVisibility(View.GONE);
                             lylDisplayData.setVisibility(View.VISIBLE);
-                            pdfView.setVisibility(View.GONE);
+                            //pdfView.setVisibility(View.GONE);
                             ltLogout.setVisibility(View.GONE);
 
                             String urlPdf = checkJobNoList.get(0).getPDFFile();
@@ -1243,7 +1270,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                                 imgStartBtn.setVisibility(View.GONE);
                                 lylStop.setVisibility(View.GONE);
                                 lylDisplayData.setVisibility(View.VISIBLE);
-                                pdfView.setVisibility(View.GONE);
+                                //pdfView.setVisibility(View.GONE);
                                 ltLogout.setVisibility(View.GONE);
 
                                 String urlPdf = startJobNoList.get(0).getPdfFile();
@@ -1399,7 +1426,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                             lylPdfShow.setVisibility(View.GONE);
                             pdfViewPager.setVisibility(View.GONE);
                             webView.setVisibility(View.GONE);
-                            pdfView.setVisibility(View.GONE);
+                            //pdfView.setVisibility(View.GONE);
                             handler.removeCallbacksAndMessages(null);
                             lylFilter.setVisibility(View.VISIBLE);
                             tvHome.setVisibility(View.VISIBLE);
@@ -1507,6 +1534,16 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
             }
         });
         btnNo.setOnClickListener(v1 -> alertDialog.dismiss());
+        LinearLayout attachfile;
+        TextView attachementfilename;
+        attachfile = findViewById(R.id.attachfile);
+        attachementfilename = findViewById(R.id.attachementfilename);
+        attachfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectImage();
+            }
+        });
     }
 
     private void apiVersion() {
@@ -1813,7 +1850,7 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
                 imgStartBtn.setVisibility(View.GONE);
                 lylStop.setVisibility(View.GONE);
                 lylDisplayData.setVisibility(View.VISIBLE);
-                pdfView.setVisibility(View.GONE);
+                //pdfView.setVisibility(View.GONE);
                 ltLogout.setVisibility(View.GONE);
 
                 String urlPdf = startJobNoList.get(0).getPdfFile();
@@ -1826,5 +1863,231 @@ public class DashboardActivityNew extends AppCompatActivity implements View.OnCl
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void selectImage() {
+        final CharSequence[] items = {"Take Photo", "Cancel"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(
+                DashboardActivityNew.this);
+        builder.setTitle("Add Photo");
+        builder.setItems(items, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                if (items[item].equals("Take Photo")) {
+                    try {
+                        String fileName = System.currentTimeMillis() + ".jpg";
+                        // create parameters for Intent with filename
+                        ContentValues values = new ContentValues();
+                        values.put(MediaStore.Images.Media.TITLE, fileName);
+                        values.put(MediaStore.Images.Media.DESCRIPTION, "Image capture by camera");
+                        imageUriGlobal = DashboardActivityNew.this.getContentResolver().insert(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                values);
+                        // create new Intent
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUriGlobal);
+                        intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+                        startActivityForResult(intent, PICK_REQUEST_CAMERA_IMAGE);
+                    } catch (SecurityException e) {
+                        FirebaseCrashlytics.getInstance().recordException(e);
+                        Toast.makeText(DashboardActivityNew.this, "You have to give permission for take image. Please Give permission.", Toast.LENGTH_SHORT).show();
+                        //CommonUses.showToast(context, "You have to give permission for take image. Please Give permission.");
+                    }
+//                } else if (items[item].equals("Choose from Gallery")) {
+//                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+//                    intent.setType("image/*");
+//                    startActivityForResult(intent, PICK_REQUEST_GALLERY_IMAGE);
+//                } else if (items[item].equals("Attached Document")) {
+//                    Intent intent = new Intent();
+//                    intent.setType("*/*");
+//                    intent.setAction(Intent.ACTION_GET_CONTENT);
+//                    startActivityForResult(Intent.createChooser(intent, "ChooseFile"), PICK_REQUEST_FILE);
+                } else if (items[item].equals("Cancel")) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.show();
+    }
+
+    private void askForResolution(final String picturePath) {
+        try {
+            attachmentpath = picturePath;
+            File imgFile = new File(attachmentpath);
+            attachementfilename.setText(imgFile.getName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+        }
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = {MediaStore.Images.Media.DATA};
+        Cursor cursor = DashboardActivityNew.this.managedQuery(uri, projection, null, null, null);
+        if (cursor != null) {
+            // HERE YOU WILL GET A NULLPOINTER IF CURSOR IS NULL
+            // THIS CAN BE, IF YOU USED OI FILE MANAGER FOR PICKING THE MEDIA
+            int column_index = cursor
+                    .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } else
+            return null;
+    }
+
+    public String compressImage(String imagePath) {
+        String filepath = "";
+        try {
+
+            Bitmap scaledBitmap = null;
+
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            Bitmap bmp = BitmapFactory.decodeFile(imagePath, options);
+
+            int actualHeight = options.outHeight;
+            int actualWidth = options.outWidth;
+
+            float imgRatio = (float) actualWidth / (float) actualHeight;
+            float maxRatio = maxWidth / maxHeight;
+
+            if (actualHeight > maxHeight || actualWidth > maxWidth) {
+                if (imgRatio < maxRatio) {
+                    imgRatio = maxHeight / actualHeight;
+                    actualWidth = (int) (imgRatio * actualWidth);
+                    actualHeight = (int) maxHeight;
+                } else if (imgRatio > maxRatio) {
+                    imgRatio = maxWidth / actualWidth;
+                    actualHeight = (int) (imgRatio * actualHeight);
+                    actualWidth = (int) maxWidth;
+                } else {
+                    actualHeight = (int) maxHeight;
+                    actualWidth = (int) maxWidth;
+                }
+            }
+
+            options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
+            options.inJustDecodeBounds = false;
+            options.inDither = false;
+            options.inPurgeable = true;
+            options.inInputShareable = true;
+            options.inTempStorage = new byte[16 * 1024];
+
+            try {
+                bmp = BitmapFactory.decodeFile(imagePath, options);
+            } catch (OutOfMemoryError exception) {
+                exception.printStackTrace();
+            }
+
+            try {
+                scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.RGB_565);
+            } catch (OutOfMemoryError exception) {
+                exception.printStackTrace();
+            }
+
+            float ratioX = actualWidth / (float) options.outWidth;
+            float ratioY = actualHeight / (float) options.outHeight;
+            float middleX = actualWidth / 2.0f;
+            float middleY = actualHeight / 2.0f;
+
+            Matrix scaleMatrix = new Matrix();
+            scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+            assert scaledBitmap != null;
+            Canvas canvas = new Canvas(scaledBitmap);
+            canvas.setMatrix(scaleMatrix);
+            canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+            if (bmp != null) {
+                bmp.recycle();
+            }
+
+            ExifInterface exif;
+            try {
+                exif = new ExifInterface(imagePath);
+                int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+                Matrix matrix = new Matrix();
+                if (orientation == 6) {
+                    matrix.postRotate(90);
+                } else if (orientation == 3) {
+                    matrix.postRotate(180);
+                } else if (orientation == 8) {
+                    matrix.postRotate(270);
+                }
+                scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0, scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix, true);
+            } catch (IOException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+            FileOutputStream out;
+
+            /*File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                    + "/Android/data/"
+                    + context.getApplicationContext().getPackageName()
+                    + "/Files/Compressed");*/
+
+            File mediaStorageDir = new File(DashboardActivityNew.this.getExternalFilesDir(null)
+                    + "/UnnatiiAttendance");
+
+            // Create the storage directory if it does not exist
+            if (!mediaStorageDir.exists()) {
+                mediaStorageDir.mkdirs();
+            }
+
+            String mImageName = "IMG_" + System.currentTimeMillis() + ".jpg";
+
+            Log.d("tag1", "image name is 0 " + System.currentTimeMillis());
+
+            filepath = (mediaStorageDir.getAbsolutePath() + "/" + mImageName);
+
+            try {
+
+                out = new FileOutputStream(filepath);
+                //write the compressed bitmap at the destination specified by filename.
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+
+            } catch (FileNotFoundException e) {
+                FirebaseCrashlytics.getInstance().recordException(e);
+            }
+
+            askForResolution(filepath);
+        } catch (Exception e) {
+            Log.d("tag", "Exeption is " + e.getMessage());
+        }
+        return filepath;
+    }
+
+    public static int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            inSampleSize = Math.min(heightRatio, widthRatio);
+        }
+        final float totalPixels = width * height;
+        final float totalReqPixelsCap = reqWidth * reqHeight * 2;
+
+        while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
+            inSampleSize++;
+        }
+
+        return inSampleSize;
+    }
+
+    @Override
+    public void onProgressUpdate(int percentage) {
+
+    }
+
+    @Override
+    public void onError() {
+
+    }
+
+    @Override
+    public void onFinish() {
+
     }
 }

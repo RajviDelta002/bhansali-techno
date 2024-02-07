@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
 import com.delta.bhansalitechno.R;
+import com.google.firebase.crashlytics.FirebaseCrashlytics;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -436,8 +437,8 @@ public class Utils {
     public static String ConvertDateFormat(String inputDate, String inputDateFormat, String outputDateFormat) {
         String outPutData = null;
         try {
-            SimpleDateFormat inputParser = new SimpleDateFormat(inputDateFormat);
-            SimpleDateFormat outputParser = new SimpleDateFormat(outputDateFormat);
+            SimpleDateFormat inputParser = new SimpleDateFormat(inputDateFormat,Locale.ENGLISH);
+            SimpleDateFormat outputParser = new SimpleDateFormat(outputDateFormat,Locale.ENGLISH);
 
             Date date;
             date = inputParser.parse(inputDate);
@@ -448,5 +449,16 @@ public class Utils {
             e.printStackTrace();
         }
         return outPutData;
+    }
+
+    public static String getCurrentTimestamp(String dateTimeFormat) {
+        try {
+            SimpleDateFormat dateFormat = new SimpleDateFormat(dateTimeFormat, Locale.ENGLISH);
+            return dateFormat.format(new Date());
+        } catch (Exception e) {
+            e.printStackTrace();
+            FirebaseCrashlytics.getInstance().recordException(e);
+            return null;
+        }
     }
 }

@@ -149,6 +149,17 @@
                 android:visibility="gone"
                 tools:ignore="ContentDescription" />
 
+            <ImageView
+                android:id="@+id/ltLogout1"
+                android:layout_width="@dimen/_15sdp"
+                android:layout_height="@dimen/_15sdp"
+                android:layout_gravity="center"
+                android:layout_marginEnd="@dimen/_3sdp"
+                android:scaleType="centerInside"
+                android:src="@drawable/shutdown"
+                android:visibility="gone"
+                tools:ignore="ContentDescription" />
+
             <com.airbnb.lottie.LottieAnimationView
                 android:id="@+id/ltLogout"
                 android:layout_width="@dimen/_20sdp"
@@ -178,7 +189,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:fontFamily="@font/seven_segment"
                 android:gravity="center"
                 android:text="00 00 00"
                 android:textColor="#0aea07"
@@ -504,12 +514,35 @@
                 android:nestedScrollingEnabled="false"
                 android:visibility="gone" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvRadioBtn"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                android:visibility="gone" />
+                android:layout_marginTop="@dimen/_2sdp"
+                android:orientation="horizontal">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvRadioBtn"
+                    android:layout_width="@dimen/_220sdp"
+                    android:layout_height="wrap_content"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/webPdfview"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/_25sdp"
+                    android:background="@drawable/edittext_bg"
+                    android:backgroundTint="#0097ff"
+                    android:text="Zoom Image"
+                    android:gravity="center"
+                    android:fontFamily="@font/gilroy_semibold"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_10sdp"
+                    android:layout_marginTop="@dimen/_2sdp"
+                    android:layout_marginHorizontal="@dimen/_4sdp"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -546,7 +579,7 @@
 
         </LinearLayout>
 
-        <com.github.barteksc.pdfviewer.PDFView
+        <com.delta.bhansalitechno.PDFView
             android:id="@+id/idPDFView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

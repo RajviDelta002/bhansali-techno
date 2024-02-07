@@ -114,6 +114,12 @@ public class StartJobListActivity extends AppCompatActivity {
                     }
                 }
             });
+            //TODO : Changes 17/10/2023
+            binding.imgBack.setOnClickListener(v -> {
+                prefManager.setMachineName("");
+                startActivity(new Intent(StartJobListActivity.this, MachineActivity.class));
+                finish();
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -148,6 +154,7 @@ public class StartJobListActivity extends AppCompatActivity {
             itemArray = jsonArray.toString();
             prefManager.setJobListArray(itemArray);
             startActivity(new Intent(StartJobListActivity.this, StopJobListActivity.class));
+            //startActivity(new Intent(StartJobListActivity.this, StopJobListActivityNew.class));
             finish();
             Toast.makeText(this, "Wait some time redirect screen....", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
@@ -219,7 +226,7 @@ public class StartJobListActivity extends AppCompatActivity {
                                     //TextLists model = new TextLists(JobListId, JobNo);
                                     JobNoModel noModel = new JobNoModel(JobListId, JobNo, Dt, EmployeeId, ProcessId, ItmId, StartDateTime, EndDateTime,
                                             CycleTime, Qty, Remarks, InsertedOn, LastUpdatedOn, InsertedByUserId, LastUpdatedByUserId, EmployeeName, ProcessName,
-                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty, RefNo, PCNo, PartNo,HubPartNo,Size,Desc,Status,HoldReasonTextListId,HoldReason,JobStartStopRemarks,false);
+                                            ItmName, ShopName, MachineName, "", DoneQty, PendingQty, RefNo, PCNo, PartNo, HubPartNo, Size, Desc, Status, HoldReasonTextListId, HoldReason, JobStartStopRemarks, false);
                                     multipleJobNoSelectList.add(noModel);
                                 }
 
@@ -340,6 +347,7 @@ public class StartJobListActivity extends AppCompatActivity {
                             }
                             if (jsonArray.length() > 0) {
                                 startActivity(new Intent(StartJobListActivity.this, StopJobListActivity.class));
+                                //startActivity(new Intent(StartJobListActivity.this, StopJobListActivityNew.class));
                                 finish();
                                 Toast.makeText(StartJobListActivity.this, "Wait some seconds redirect screen....", Toast.LENGTH_SHORT).show();
                             }

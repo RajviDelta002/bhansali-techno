@@ -43,7 +43,8 @@
                 android:layout_height="@dimen/_30sdp"
                 android:layout_gravity="center|start"
                 android:gravity="center|start"
-                android:hint="Enter Production Qty"
+                android:hint="Enter Accepted Qty"
+                android:textSize="@dimen/_10sdp"
                 android:inputType="number"
                 android:nextFocusDown="@+id/edtAcceptProductionQty"
                 android:singleLine="true"
@@ -74,8 +75,9 @@
                 android:layout_height="@dimen/_30sdp"
                 android:layout_gravity="center|start"
                 android:gravity="center|start"
-                android:hint="Enter Accept Production Qty"
+                android:hint="Enter Rejected Qty"
                 android:inputType="number"
+                android:textSize="@dimen/_10sdp"
                 android:nextFocusDown="@+id/edtRemarks"
                 android:singleLine="true"
                 android:textColorHint="@color/colorPrimary" />
@@ -102,8 +104,85 @@
         android:layout_marginVertical="@dimen/_5sdp"
         android:gravity="center|start"
         android:hint="Enter Remarks"
+        android:textSize="@dimen/_10sdp"
         android:singleLine="true"
         android:textColorHint="@color/colorPrimary" />
+
+    <TextView
+        android:id="@+id/edtlocation"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/_25sdp"
+        android:layout_marginTop="@dimen/_5sdp"
+        android:drawableEnd="@drawable/vw_ic_arrow_down"
+        android:drawableTint="@color/black"
+        android:fontFamily="@font/gilroy_regular"
+        android:hint="Select Location"
+        android:singleLine="true"
+        android:paddingHorizontal="@dimen/_6sdp"
+        android:layout_gravity="center"
+        android:gravity="center|start"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/_12sdp" />
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dimen5dp"
+        android:layout_marginLeft="@dimen/dimen5dp"
+        android:layout_marginRight="@dimen/dimen5dp"
+        android:layout_marginTop="@dimen/dimen5dp">
+
+        <LinearLayout
+            android:id="@+id/attachfile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="3dp">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_attachment"
+                android:contentDescription="@string/image_description" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dimen5dp"
+                android:text="please_click_here_for_attachment"
+                android:textSize="15sp" />
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dimen5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Attachment"
+            android:textColor="@color/colorPrimary"
+            android:textSize="15sp"/>
+
+        <Space
+            android:layout_width="@dimen/dimen5dp"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            android:id="@+id/attachementfilename"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No attachment selected"
+            android:textColor="@color/black"
+            android:textSize="15sp"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

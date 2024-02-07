@@ -470,6 +470,22 @@
                     tools:ignore="HardcodedText" />
             </LinearLayout>
 
+           <!-- <Button
+                android:id="@+id/webPdfview"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_20sdp"
+                android:background="@drawable/edittext_bg"
+                android:backgroundTint="#0097ff"
+                android:text="click to see PDF View in Web"
+                android:fontFamily="@font/gilroy_semibold"
+                android:layout_gravity="center_vertical|center_horizontal"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_10sdp"
+                android:visibility="visible"
+                android:layout_marginTop="@dimen/_2sdp"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"/>-->
+
         </LinearLayout>
 
     </LinearLayout>

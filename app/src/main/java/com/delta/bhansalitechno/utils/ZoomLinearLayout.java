@@ -5,7 +5,6 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 public class ZoomLinearLayout extends RelativeLayout implements ScaleGestureDetector.OnScaleGestureListener {
@@ -16,11 +15,11 @@ public class ZoomLinearLayout extends RelativeLayout implements ScaleGestureDete
         ZOOM
     }
 
-    private static final float MIN_ZOOM = 1.0f;
-    private static final float MAX_ZOOM = 4.0f;
+    private static final float MIN_ZOOM = 100.0f;
+    private static final float MAX_ZOOM = 400.0f;
 
     private Mode mode = Mode.NONE;
-    private float scale = 1.0f;
+    private float scale = 100.0f;
     private float lastScaleFactor = 0f;
 
     private float startX = 0f;

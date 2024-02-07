@@ -5,6 +5,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
@@ -81,6 +82,7 @@ public class StopJobListAdapter extends RecyclerView.Adapter<StopJobListAdapter.
         private CheckBox cbJob;
         private TextView tvJobNo, tvMachine, tvShop, tvPartNo, tvQty, tvProcess, tvHubPort, tvFinalSize, tvRemark;
         private TextView btnHold, btnStop;
+        //private Button webPdfview;
 
         public StartJobListAdapterVH(@NonNull View itemView) {
             super(itemView);
@@ -95,12 +97,14 @@ public class StopJobListAdapter extends RecyclerView.Adapter<StopJobListAdapter.
                 tvHubPort = itemView.findViewById(R.id.tvHubPort);
                 tvFinalSize = itemView.findViewById(R.id.tvFinalSize);
                 tvRemark = itemView.findViewById(R.id.tvRemark);
+                //webPdfview = itemView.findViewById(R.id.webPdfview);
 
                 btnHold = itemView.findViewById(R.id.btnHold);
                 btnStop = itemView.findViewById(R.id.btnStop);
 
                 btnHold.setOnClickListener(view -> listener.onItemClick(view, getAdapterPosition()));
                 btnStop.setOnClickListener(view -> listener.onItemClick(view, getAdapterPosition()));
+                //webPdfview.setOnClickListener(view -> listener.onItemClick(view, getAdapterPosition()));
             } catch (Exception e) {
                 e.printStackTrace();
             }

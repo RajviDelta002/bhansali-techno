@@ -52,11 +52,17 @@ public class SplashActivity extends AppCompatActivity {
                                 && !prefManager.getJobListArray().isEmpty()) {
                             //startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
                             startActivity(new Intent(SplashActivity.this, StopJobListActivity.class));
+                            //startActivity(new Intent(SplashActivity.this, StopJobListActivityNew.class));
                         }else if (prefManager.isLoggedIn().equalsIgnoreCase("True")
                                 && !prefManager.getMachineName().isEmpty()
-                                /*&& !prefManager.getJobListArray().isEmpty()*/) {
+                                && prefManager.getJobListArray().isEmpty()) {
                             //startActivity(new Intent(SplashActivity.this, DashboardActivityNew.class));
-                            startActivity(new Intent(SplashActivity.this, StopJobListActivity.class));
+
+                            //TODO : Changes 17/10/2023
+                            //startActivity(new Intent(SplashActivity.this, StopJobListActivity.class));
+                            //startActivity(new Intent(SplashActivity.this, StartJobListActivity.class));
+
+                            startActivity(new Intent(SplashActivity.this, MachineActivity.class));
                         } else if (prefManager.isLoggedIn().equalsIgnoreCase("True") /*&& !prefManager.getMachineName().isEmpty()*/) {
                             startActivity(new Intent(SplashActivity.this, MachineActivity.class));
                         } else {

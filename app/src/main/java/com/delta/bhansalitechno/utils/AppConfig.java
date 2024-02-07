@@ -6,7 +6,7 @@ public class AppConfig {
 
     //public static final String BASE_URL = "http://110.227.253.77:90/DeltaiShop/";    /*Galaxy*/
     //public static final String BASE_URL = "http://192.168.0.105/ishop/";    /*Live*/
-    //public static final String BASE_URL = "http://192.168.0.144/ishop/";    /*PM*/
+    //public static final String BASE_URL = "http://192.168.0.88/ishop/";    /*PM*/
 
     //public static final String BASE_URL = "http://103.127.146.238/DeltaiShopBhansali/";    /*Old Live*/
     public static final String BASE_URL = "http://13.235.202.211/DeltaiShopBhansali/";    /*Bhanshali Live*/
@@ -148,6 +148,7 @@ public class AppConfig {
     public static final String API_MACHINE = "API/API_MachineList.aspx";
     public static final String API_RADIO_BUTTON = "API/API_GetFileAgainstJob.aspx";
     public static final String API_TEXT_LIST = "API/API_TextLists.aspx";
+    public static final String API_LOCATION = "API/API_Locations.aspx";
 
     //API From Duke Marketing Person App
     //public static final String LOGIN_API = "API_Login.aspx";
